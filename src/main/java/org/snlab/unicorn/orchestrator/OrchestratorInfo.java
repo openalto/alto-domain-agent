@@ -3,9 +3,9 @@ package org.snlab.unicorn.orchestrator;
 import com.sun.org.apache.xpath.internal.operations.Or;
 
 public class OrchestratorInfo {
-    OrchestratorInfo() { }
+    public OrchestratorInfo() { }
 
-    OrchestratorInfo(int id, String ip, String registry){
+    public OrchestratorInfo(int id, String ip, String registry){
         this.id = id;
         this.ip = ip;
         this.registry = registry;

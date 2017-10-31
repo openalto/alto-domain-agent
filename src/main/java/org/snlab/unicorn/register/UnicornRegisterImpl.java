@@ -2,6 +2,7 @@ package org.snlab.unicorn.register;
 
 import com.sun.org.apache.xpath.internal.operations.Or;
 import org.snlab.unicorn.orchestrator.OrchestratorInfo;
+import org.snlab.unicorn.server.ServerInfo;
 
 import java.util.Collection;
 
@@ -16,5 +17,6 @@ public class UnicornRegisterImpl implements UnicornRegister {
     public void register() {
         //TODO
         System.out.println("Register");
+        ServerInfo.getInstance();
     }
 }

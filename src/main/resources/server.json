@@ -2,5 +2,21 @@
   "domain-name": "Domain-1",
   "domain-ip": "10.0.0.1",
   "http-port": 8181,
-  "control-url": "/experimental/v1/control"
+  "control-url": "/experimental/v1/control",
+  "hosts": [
+    "10.0.0.100",
+    "10.0.0.101",
+    "10.0.0.102",
+    "10.0.0.103",
+    "10.0.0.104",
+    "10.0.0.105"
+  ],
+  "ingress-points": [
+    "10.0.0.200",
+    "10.0.0.201",
+    "10.0.0.202",
+    "10.0.0.203",
+    "10.0.0.204",
+    "10.0.0.205"
+  ]
 }
