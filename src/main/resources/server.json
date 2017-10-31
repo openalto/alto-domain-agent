@@ -1,0 +1,6 @@
+{
+  "domain-name": "Domain-1",
+  "domain-ip": "10.0.0.1",
+  "http-port": 8181,
+  "control-url": "/experimental/v1/control"
+}
