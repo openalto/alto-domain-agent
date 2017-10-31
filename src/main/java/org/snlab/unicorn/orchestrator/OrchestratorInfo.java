@@ -1,14 +1,27 @@
 package org.snlab.unicorn.orchestrator;
 
-import com.sun.org.apache.xpath.internal.operations.Or;
-
 public class OrchestratorInfo {
-    public OrchestratorInfo() { }
+    protected int id;
+    protected String ip;
+    protected int port;
+    protected String registry;
 
-    public OrchestratorInfo(int id, String ip, String registry){
+    public OrchestratorInfo() {
+    }
+
+    public OrchestratorInfo(int id, String ip, int port, String registry) {
         this.id = id;
         this.ip = ip;
+        this.port = port;
         this.registry = registry;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     public int getId() {
@@ -34,8 +47,4 @@ public class OrchestratorInfo {
     public void setRegistry(String registry) {
         this.registry = registry;
     }
-
-    protected int id;
-    protected String ip;
-    protected String registry;
 }

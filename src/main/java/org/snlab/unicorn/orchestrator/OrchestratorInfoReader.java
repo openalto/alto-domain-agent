@@ -20,6 +20,7 @@ public class OrchestratorInfoReader {
             OrchestratorInfo info = new OrchestratorInfo(
                     orchestrator.getInt("id"),
                     orchestrator.getString("ip"),
+                    orchestrator.getInt("port"),
                     orchestrator.getString("registry")
             );
             infos.add(info);
