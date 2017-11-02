@@ -10,7 +10,7 @@ public class ServerInfoReader {
         JsonReader rdr = Json.createReader(stream);
         JsonObject obj = rdr.readObject();
         info.setDomainName(obj.getString("domain-name"));
-        info.setControlURL(obj.getString("control-url"));
+        info.setUpdateURL(obj.getString("control-url"));
         info.setDomainIp(obj.getString("domain-ip"));
         info.setHttpPort(obj.getInt("http-port"));
 

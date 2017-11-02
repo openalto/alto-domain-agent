@@ -2,15 +2,13 @@ package org.snlab.unicorn.server;
 
 import org.snlab.unicorn.UnicornDefinitions;
 
-import javax.json.*;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ServerInfo {
     private static ServerInfo instance = null;
     protected String domainName;
-    protected String controlURL;
+    protected String updateURL;
     protected String domainIp;
     protected int httpPort;
     protected List<String> hosts;
@@ -18,7 +16,7 @@ public class ServerInfo {
 
     protected ServerInfo() {
         this.domainName = "";
-        this.controlURL = "";
+        this.updateURL = "";
         this.domainIp = "";
         this.httpPort = 0;
         this.hosts = new ArrayList<>();
@@ -57,12 +55,12 @@ public class ServerInfo {
         this.domainName = domainName;
     }
 
-    public String getControlURL() {
-        return controlURL;
+    public String getUpdateURL() {
+        return updateURL;
     }
 
-    public void setControlURL(String controlURL) {
-        this.controlURL = controlURL;
+    public void setUpdateURL(String updateURL) {
+        this.updateURL = updateURL;
     }
 
     public List<String> getHosts() {

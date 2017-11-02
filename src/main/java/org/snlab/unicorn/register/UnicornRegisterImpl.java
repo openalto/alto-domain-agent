@@ -23,6 +23,10 @@ public class UnicornRegisterImpl implements UnicornRegister {
         this.infos = infos;
     }
 
+    private String buildCompleteURL(String domainIP, int port, String urlRoute, String protocol){
+        return protocol + "://" + domainIP + ":" + port + urlRoute;
+    }
+
     private JsonObject buildRegisterJSON() {
         ServerInfo serverInfo = ServerInfo.getInstance();
         JsonBuilderFactory factory = Json.createBuilderFactory(new HashMap<>());
@@ -37,7 +41,12 @@ public class UnicornRegisterImpl implements UnicornRegister {
         }
         JsonObject object = factory.createObjectBuilder()
                 .add("domain-name", serverInfo.getDomainName())
-                .add("controller-url", serverInfo.getControlURL())
+                .add("update-url", buildCompleteURL(
+                        serverInfo.getDomainIp(),
+                        serverInfo.getHttpPort(),
+                        serverInfo.getUpdateURL(),
+                        "http"
+                ))
                 .add("hosts", hostsBuilder)
                 .add("ingress-points", ingressPointsBuilder)
                 .build();
@@ -82,6 +91,7 @@ public class UnicornRegisterImpl implements UnicornRegister {
                 String responseString = response.toString();
 
                 // TODO: check response string
+                System.out.println(responseString);
             } catch (Exception e) {
                 e.printStackTrace();
             }
