@@ -1,6 +1,10 @@
 package org.snlab.unicorn.server;
 
-import javax.json.*;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
 import java.io.InputStream;
 
 public class ServerInfoReader {

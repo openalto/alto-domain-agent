@@ -14,7 +14,7 @@ public class UnicornApplication extends ResourceConfig {
         super(UnicornService.class, SseFeature.class);
 
         // Register to orchestrator
-        Collection<OrchestratorInfo> infos = OrchestratorInfoReader.raad(UnicornDefinitions.OrchestratorConfig.CONFIG_PATH);
+        Collection<OrchestratorInfo> infos = OrchestratorInfoReader.read(UnicornDefinitions.OrchestratorConfig.CONFIG_PATH);
         UnicornRegister register = new UnicornRegisterBuilder().addOrchestrators(infos).build();
         register.register();
     }

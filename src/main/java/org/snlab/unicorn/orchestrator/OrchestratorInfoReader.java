@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class OrchestratorInfoReader {
-    public static Collection<OrchestratorInfo> raad(String orchestratorConfigPath) {
+    public static Collection<OrchestratorInfo> read(String orchestratorConfigPath) {
         List<OrchestratorInfo> infos = new ArrayList<>();
         InputStream stream = OrchestratorInfo.class.getClassLoader().getResourceAsStream(orchestratorConfigPath);
 
