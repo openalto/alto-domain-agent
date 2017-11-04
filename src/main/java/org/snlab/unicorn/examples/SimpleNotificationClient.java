@@ -31,6 +31,7 @@ import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snlab.unicorn.adapter.ODLConstants;
 import org.snlab.unicorn.model.odl.SalRemoteResponse;
 import org.snlab.unicorn.model.odl.StreamLocation;
 
@@ -42,8 +43,6 @@ public class SimpleNotificationClient
 {
     private final static Logger LOG = LoggerFactory.getLogger(SimpleNotificationClient.class);
     private final static String DEFAULT_WEBSOCKET_URI = "ws://localhost:8185/data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=SUBTREE";
-    private final static String SAL_REMOTE_SUBSCRIPTION = "/restconf/operations/sal-remote:create-data-change-event-subscription";
-    private final static String RESTCONF_STREAM = "";
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -100,13 +99,13 @@ public class SimpleNotificationClient
         String websocketSteamUri = null;
         try {
             String outputStreamNameJson = executor.execute(Request
-                    .Post(baseUri + SAL_REMOTE_SUBSCRIPTION)
+                    .Post(baseUri + ODLConstants.SAL_REMOTE_SUBSCRIPTION)
                     .bodyString(data, ContentType.APPLICATION_JSON))
                     .returnContent().asString();
             LOG.info("Got subscription response: {}", outputStreamNameJson);
             SalRemoteResponse outputStreamName = mapper.readValue(outputStreamNameJson, SalRemoteResponse.class);
             String websocketLocationJson = executor.execute(Request
-                    .Get(baseUri + RESTCONF_STREAM + outputStreamName.output.streamName))
+                    .Get(baseUri + ODLConstants.RESTCONF_STREAM + outputStreamName.output.streamName))
                     .returnContent().asString();
             StreamLocation websocketLocation = mapper.readValue(websocketLocationJson, StreamLocation.class);
             websocketSteamUri = websocketLocation.location;

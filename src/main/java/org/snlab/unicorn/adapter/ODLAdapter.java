@@ -26,6 +26,9 @@ public class ODLAdapter implements ControllerAdapter {
     private URI baseUri;
     private Credentials auth;
     private Executor executor;
+    private boolean isAsPathChanged = false;
+    private boolean isResourceChanged = false;
+    private ODLNotificationClient pathManagerSocketClient;
 
     public ODLAdapter(URI baseUri, Credentials auth) {
         this.baseUri = baseUri;
@@ -35,6 +38,12 @@ public class ODLAdapter implements ControllerAdapter {
             this.auth = auth;
         }
         executor = Executor.newInstance().auth(this.auth);
+        setupWebsocketToListenUpdate();
+    }
+
+    private void setupWebsocketToListenUpdate() {
+        pathManagerSocketClient = new ODLNotificationClient(baseUri, auth);
+        pathManagerSocketClient.connect(ODLConstants.UNICORN_PATH_MANAGER_SUBSCRIPTION);
     }
 
     private Request getRestconfRequest(String path, String data) {
@@ -91,12 +100,20 @@ public class ODLAdapter implements ControllerAdapter {
     }
 
     @Override
-    public void addAsPathListener() {
-        // TODO: Inject a callback. Once receiving as path changed notification, call the method.
+    public boolean ifAsPathChangedThenCleanState() {
+        if (isAsPathChanged == true) {
+            isAsPathChanged = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
-    public void addResourceListener() {
-        // TODO: Inject a callback. Once receiving resource changed notification, call the method.
+    public boolean ifResourceChangedThenCleanState() {
+        if (pathManagerSocketClient != null) {
+            return pathManagerSocketClient.readStateAndClean();
+        }
+        return false;
     }
 }

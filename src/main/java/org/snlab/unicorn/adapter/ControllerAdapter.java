@@ -27,12 +27,12 @@ public interface ControllerAdapter {
     public ResourceQueryResponse getResource(List<QueryDesc> querySet);
 
     /**
-     * Listen as path changes for stateful path query API.
+     * Check if as-path changed and then clean the state for stateful path query API.
      */
-    public void addAsPathListener();
+    public boolean ifAsPathChangedThenCleanState();
 
     /**
-     * Listen resource changes for stateful resource query API.
+     * Check if resource changed and then clean the state for stateful resource query API.
      */
-    public void addResourceListener();
+    public boolean ifResourceChangedThenCleanState();
 }

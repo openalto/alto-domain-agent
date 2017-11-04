@@ -20,12 +20,14 @@ public class KytosAdapter implements ControllerAdapter {
     }
 
     @Override
-    public void addAsPathListener() {
+    public boolean ifAsPathChangedThenCleanState() {
         // TODO: Inject a callback. Once receiving as path changed notification, call the method.
+        return false;
     }
 
     @Override
-    public void addResourceListener() {
+    public boolean ifResourceChangedThenCleanState() {
         // TODO: Inject a callback. Once receiving resource changed notification, call the method.
+        return false;
     }
 }
