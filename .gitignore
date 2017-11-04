@@ -19,3 +19,14 @@ target
 *.iml
 *.ipr
 *.iws
+
+# Eclipse Project
+.classpath
+.project
+.settings
+
+# VSCode
+.vscode
+
+# Backup Files
+*.bak
