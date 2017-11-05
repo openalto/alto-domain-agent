@@ -13,6 +13,11 @@
         <load-on-startup>1</load-on-startup>
         <async-supported>true</async-supported>
     </servlet>
+    <servlet>
+        <servlet-name>Bootstrap</servlet-name>
+        <servlet-class>org.snlab.unicorn.Bootstrap</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Jersey Web Application</servlet-name>
         <url-pattern>/experimental/v1/*</url-pattern>
