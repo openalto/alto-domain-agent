@@ -1,5 +1,8 @@
 package org.snlab.unicorn;
 
+import org.snlab.unicorn.handlers.OrchestratorQueryHandler;
+
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -60,9 +63,11 @@ public class UnicornService {
     public class ControlServiceResource {
         @POST
         @Path("{id}")
-        public void getControlStreamQuery(@PathParam("id") String id) {
-            System.out.println(id);
-            //TODO
+        @Produces(MediaType.APPLICATION_JSON)
+        @Consumes(MediaType.APPLICATION_JSON)
+        public String getControlStreamQuery(@PathParam("id") String id, String body) {
+            OrchestratorQueryHandler handler = OrchestratorQueryHandler.getHandler(id);
+            return handler.handle(body);
         }
     }
 }
