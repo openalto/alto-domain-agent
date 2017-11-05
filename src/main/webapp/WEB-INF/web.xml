@@ -22,4 +22,24 @@
         <servlet-name>Jersey Web Application</servlet-name>
         <url-pattern>/experimental/v1/*</url-pattern>
     </servlet-mapping>
+    <context-param>
+        <description>The value of adapter.type can be one of {odl, kytos} now</description>
+        <param-name>adapter.type</param-name>
+        <param-value>odl</param-value>
+    </context-param>
+    <context-param>
+        <description>Base uri for controller restful api</description>
+        <param-name>adapter.baseUri</param-name>
+        <param-value>http://localhost:8181</param-value>
+    </context-param>
+    <context-param>
+        <description>Authentication username for controller restful api</description>
+        <param-name>adapter.auth.username</param-name>
+        <param-value>admin</param-value>
+    </context-param>
+    <context-param>
+        <description>Authentication password for controller restful api</description>
+        <param-name>adapter.auth.password</param-name>
+        <param-value>admin</param-value>
+    </context-param>
 </web-app>

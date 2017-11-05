@@ -1,6 +1,21 @@
 package org.snlab.unicorn.handlers;
 
 
+import java.io.StringReader;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.snlab.unicorn.adapter.ControllerAdapter;
 import org.snlab.unicorn.exceptions.UnknownProtocol;
 import org.snlab.unicorn.exceptions.UnknownQueryAction;
 import org.snlab.unicorn.exceptions.UnknownQueryType;
@@ -8,28 +23,35 @@ import org.snlab.unicorn.model.Flow;
 import org.snlab.unicorn.model.Query;
 import org.snlab.unicorn.model.QueryItem;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 public class OrchestratorQueryHandler {
+    private final static Logger LOG = LoggerFactory.getLogger(OrchestratorQueryHandler.class);
+
     private static Map<String, OrchestratorQueryHandler> handlerMap = new HashMap<>();
     private String identifier;
+    private ControllerAdapter adapter;
 
-    public OrchestratorQueryHandler(String identifier) {
+    private OrchestratorQueryHandler(String identifier, ControllerAdapter adapter) {
         this.identifier = identifier;
+        this.adapter = adapter;
+    }
+
+    public static boolean setHandler(String identifier, ControllerAdapter adapter) {
+        boolean result = true;
+        if (handlerMap.containsKey(identifier)) {
+            LOG.info("Identifier is existing. Cannot put a new handler.");
+            result = false;
+        } else {
+            handlerMap.put(identifier, new OrchestratorQueryHandler(identifier, adapter));
+        }
+        return result;
     }
 
     public static OrchestratorQueryHandler getHandler(String identifier) {
-        if (!handlerMap.containsKey(identifier))
-            handlerMap.put(identifier, new OrchestratorQueryHandler(identifier));
         return handlerMap.get(identifier);
+    }
+
+    public static Collection<OrchestratorQueryHandler> getAllHandlers() {
+        return handlerMap.values();
     }
 
     private Set<QueryItem> parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {

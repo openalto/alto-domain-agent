@@ -2,6 +2,7 @@ package org.snlab.unicorn.adapter;
 
 import java.util.List;
 
+// FIXME: It doesn't make sense to introduce odl model in the generic adapter interface
 import org.snlab.unicorn.model.odl.PathQueryResponse;
 import org.snlab.unicorn.model.odl.QueryDesc;
 import org.snlab.unicorn.model.odl.ResourceQueryResponse;
