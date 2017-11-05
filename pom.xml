@@ -80,6 +80,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${servlet.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
       <artifactId>jersey-container-servlet</artifactId>
     </dependency>
@@ -133,5 +138,6 @@
     <httpcomponents.version>4.5.3</httpcomponents.version>
     <slf4j.version>1.7.21</slf4j.version>
     <jackson.version>2.8.9</jackson.version>
+    <servlet.version>2.5</servlet.version>
   </properties>
 </project>
