@@ -1,8 +1,8 @@
 {
   "domain-name": "Domain-1",
-  "domain-ip": "10.0.0.1",
-  "http-port": 8181,
-  "control-url": "/experimental/v1/control",
+  "domain-ip": "127.0.0.1",
+  "http-port": 9000,
+  "control-url": "/experimental/v1/unicorn/updates",
   "hosts": [
     "10.0.0.100",
     "10.0.0.101",
