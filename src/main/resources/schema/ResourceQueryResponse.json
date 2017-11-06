@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "ane-matrix": {
+      "items": {
+        "items": {
+          "$ref": "ANEFlowCoefficient.json"
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "anes": {
+      "items": {
+        "$ref": "ANE.json"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "ane-matrix",
+    "anes"
+  ],
+  "type": "object"
+}

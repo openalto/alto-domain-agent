@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "query-id": {
+      "type": "string"
+    },
+    "response": {
+      "$schema": "ResourceQueryResponse.json"
+    }
+  },
+  "required": [
+    "response"
+  ]
+}

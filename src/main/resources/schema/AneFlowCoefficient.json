@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "coefficient": {
+      "format": "double",
+      "type": "number"
+    },
+    "flow-id": {
+      "format": "int32",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "flow-id"
+  ],
+  "type": "object"
+}

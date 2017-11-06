@@ -1,0 +1,12 @@
+{
+    "properties": {
+        "availbw": {
+            "format": "int32",
+                "type": "integer"
+        }
+    },
+    "required": [
+        "availbw"
+    ],
+    "type": "object"
+}
