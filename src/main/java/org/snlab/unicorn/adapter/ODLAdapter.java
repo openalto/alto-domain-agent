@@ -3,7 +3,7 @@ package org.snlab.unicorn.adapter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -71,7 +71,7 @@ public class ODLAdapter implements ControllerAdapter {
         return new ResourceQueryResponseBody();
     }
 
-    public PathQueryResponseBody getAsPath(List<QueryItem> querySet) {
+    public PathQueryResponseBody getAsPath(Set<QueryItem> querySet) {
         try {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_PATH_QUERY_URI, querySet.toString()));
@@ -86,7 +86,7 @@ public class ODLAdapter implements ControllerAdapter {
         return null;
     }
 
-    public ResourceQueryResponseBody getResource(List<QueryItem> querySet) {
+    public ResourceQueryResponseBody getResource(Set<QueryItem> querySet) {
         try {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_RESOURCE_QUERY_URI, querySet.toString()));
@@ -119,5 +119,17 @@ public class ODLAdapter implements ControllerAdapter {
             return pathManagerSocketClient.readStateAndClean();
         }
         return false;
+    }
+
+    @Override
+    public void requirePathQuery() {
+        // TODO: Add lock for the signal change
+        isAsPathChanged = true;
+    }
+
+    @Override
+    public void requireResourceQuery() {
+        // TODO: Add lock for the signal change
+        isResourceChanged = true;
     }
 }

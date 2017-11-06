@@ -12,10 +12,17 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.sse.Sse;
+import javax.ws.rs.sse.SseEventSink;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.adapter.ControllerAdapter;
+import org.snlab.unicorn.dataprovider.QueryDataProvider;
 import org.snlab.unicorn.exceptions.UnknownProtocol;
 import org.snlab.unicorn.exceptions.UnknownQueryAction;
 import org.snlab.unicorn.exceptions.UnknownQueryType;
@@ -27,9 +34,12 @@ public class OrchestratorQueryHandler {
     private final static Logger LOG = LoggerFactory.getLogger(OrchestratorQueryHandler.class);
 
     private static Map<String, OrchestratorQueryHandler> handlerMap = new HashMap<>();
+    private static ObjectMapper mapper = new ObjectMapper();
     private String identifier;
     private ControllerAdapter adapter;
     private Set<String> queryIds = new HashSet<>();
+    private Thread pathQueryLoop;
+    private Thread resourceQueryLoop;
 
     private OrchestratorQueryHandler(String identifier, ControllerAdapter adapter) {
         this.identifier = identifier;
@@ -55,7 +65,7 @@ public class OrchestratorQueryHandler {
         return handlerMap.values();
     }
 
-    private Set<QueryItem> parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {
+    private Query parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {
         Set<QueryItem> items;
         JsonReader jsonReader = Json.createReader(new StringReader(body));
         JsonObject object = jsonReader.readObject();
@@ -143,27 +153,108 @@ public class OrchestratorQueryHandler {
     }
 
     public String handle(String body) {
+        Query query;
         Set<QueryItem> items;
         try {
-            items = parseBody(body);
-            /**
-             * Only keeping QueryItems is not enough.
-             * Handler needs query-id and query-type to replay query
-             * and send the result to the update stream.
-             *
-             * TODO:
-             *   1) Change QueryDataProvider to record query;
-             *   2) Record query-id set in each handler.
-             */
+            query = parseBody(body);
+            items = query.getQueryDesc();
         } catch (UnknownQueryAction | UnknownProtocol | UnknownQueryType e) {
             LOG.error("Invalid query body:", e);
             return "{\"meta\": { \"code\": \"Unknown type\"}}";
         }
+        queryIds.add(query.getQueryId());
         if (items.size() == 0){
             return "{\"meta\": { \"code\": \"success\"}}";
         }
 
-        //TODO: Handle QueryItems
+        switch (query.getQueryType()) {
+            case PATH_QUERY:
+                adapter.requirePathQuery();
+                break;
+            case RESOURCE_QUERY:
+                adapter.requireResourceQuery();
+        }
         return "{\"meta\": { \"code\": \"success\"}}";
+    }
+
+    /**
+     * Play a query record with controller adapter by a given query id.
+     * @param id the query id.
+     * @return the query result from controller adapter.
+     */
+    public String doQuery(String id) {
+        Query query = QueryDataProvider.getInstance().getQuery(id);
+        String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
+        switch (query.getQueryType()) {
+            case PATH_QUERY:
+                try {
+                    result = mapper.writeValueAsString(adapter.getAsPath(query.getQueryDesc()));
+                } catch (JsonProcessingException e) {
+                    LOG.error("Invalid json string:", e);
+                }
+                break;
+            case RESOURCE_QUERY:
+                try {
+                    result = mapper.writeValueAsString(adapter.getResource(query.getQueryDesc()));
+                } catch (JsonProcessingException e) {
+                    LOG.error("Invalid json string:", e);
+                }
+        }
+        return result;
+    }
+
+    public void loopForPathQueryUpdate(SseEventSink eventSink, Sse sse) {
+        if (pathQueryLoop == null) {
+            pathQueryLoop = new Thread(() -> {
+                while (true) {
+                    if (adapter.ifAsPathChangedThenCleanState()) {
+                        LOG.debug("As path data or request changed. Replay request.");
+                        // TODO: Get query-id from somewhere
+                        String id = "";
+                        String pathQueryResponse = doQuery(id);
+                        eventSink.send(sse.newEventBuilder()
+                                .name(MediaType.APPLICATION_JSON)
+                                .data(pathQueryResponse)
+                                .build());
+                    }
+                }
+            });
+            pathQueryLoop.start();
+        } else {
+            LOG.info("The path query loop has been running. [handler: {}]", identifier);
+        }
+    }
+
+    public void loopForResourceQueryUpdate(SseEventSink eventSink, Sse sse) {
+        if (resourceQueryLoop == null) {
+            resourceQueryLoop = new Thread(() -> {
+                while (true) {
+                    if (adapter.ifResourceChangedThenCleanState()) {
+                        LOG.debug("Resource data or request changed. Replay request.");
+                        // TODO: Get query-id from somewhere
+                        String id = "";
+                        String resourceQueryResponse = doQuery(id);
+                        eventSink.send(sse.newEventBuilder()
+                                .name(MediaType.APPLICATION_JSON)
+                                .data(resourceQueryResponse)
+                                .build());
+                    }
+                }
+            });
+            resourceQueryLoop.start();
+        } else {
+            LOG.info("The resource query loop has been running. [handler: {}]", identifier);
+        }
+    }
+
+    public void stop() {
+        if (pathQueryLoop != null) {
+            pathQueryLoop.interrupt();
+            pathQueryLoop = null;
+        }
+        if (resourceQueryLoop != null) {
+            resourceQueryLoop.interrupt();
+            resourceQueryLoop = null;
+        }
     }
 }

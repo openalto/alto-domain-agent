@@ -1,18 +1,18 @@
 package org.snlab.unicorn.dataprovider;
 
-import org.snlab.unicorn.model.QueryItem;
-
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.snlab.unicorn.model.Query;
+import org.snlab.unicorn.model.QueryItem;
+
 public class QueryDataProvider {
     private static QueryDataProvider instance = null;
-    private Map<String, Set<QueryItem>> queryMap;
+    private Map<String, Query> queryMap;
     private Lock lock = new ReentrantLock();
 
     protected QueryDataProvider() {
@@ -30,16 +30,29 @@ public class QueryDataProvider {
         return this.queryMap.containsKey(id);
     }
 
-    public Set<QueryItem> getItems(String id) {
+    public Query getQuery(String id) {
         return this.queryMap.get(id);
+    }
+
+    public void addQuery(String id, Query query) {
+        lock.lock();
+        try {
+            this.queryMap.put(id, query);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Set<QueryItem> getItems(String id) {
+        return this.queryMap.get(id).getQueryDesc();
     }
 
     public void addQueryItem(String id, QueryItem item) {
         lock.lock();
         try {
             if (!this.queryMap.containsKey(id))
-                this.queryMap.put(id, new HashSet<>());
-            this.queryMap.get(id).add(item);
+                this.queryMap.put(id, new Query());
+            this.queryMap.get(id).getQueryDesc().add(item);
         } finally {
             lock.unlock();
         }
@@ -49,8 +62,8 @@ public class QueryDataProvider {
         lock.lock();
         try {
             if (!this.queryMap.containsKey(id))
-                this.queryMap.put(id, new HashSet<>());
-            this.queryMap.get(id).addAll(items);
+                this.queryMap.put(id, new Query());
+            this.queryMap.get(id).getQueryDesc().addAll(items);
         } finally {
             lock.unlock();
         }

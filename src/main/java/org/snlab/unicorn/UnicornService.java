@@ -44,9 +44,6 @@ public class UnicornService {
     private final static String PARAMETER_NAME_ADAPTER_AUTH_PASSWORD = "adapter.auth.password";
     private final static String ADAPTER_TYPE_ODL = "odl"; // Maybe we can use an enum type
 
-    // Maybe we can move this list to another place
-    private static List<ControllerAdapter> adapterList = new ArrayList<>();
-
     @Context
     private UriInfo uriInfo;
     @Context
@@ -100,33 +97,8 @@ public class UnicornService {
                 .data(Paths.get(uriInfo.getBaseUri().toString(), "unicorn", CONTROL_STREAM_ROUTE,
                         newControlStreamId.toString()).toString())
                 .build());
-        // TODO: Replace the lambda expression by a closable thread class
-        new Thread(() -> {
-            while (true) {
-                if (newAdapter.ifAsPathChangedThenCleanState()) {
-                    LOG.debug("As path data or request changed. Replay request.");
-                    // TODO: Handle path query
-                    String pathQueryResponse = "";
-                    eventSink.send(sse.newEventBuilder()
-                            .name(MediaType.APPLICATION_JSON)
-                            .data(pathQueryResponse)
-                            .build());
-                }
-            }
-        }).start();
-        new Thread(() -> {
-            while (true) {
-                if (newAdapter.ifResourceChangedThenCleanState()) {
-                    LOG.debug("Resource data or request changed. Replay request.");
-                    // TODO: Handle resource query
-                    String resourceQueryResponse = "";
-                    eventSink.send(sse.newEventBuilder()
-                            .name(MediaType.APPLICATION_JSON)
-                            .data(resourceQueryResponse)
-                            .build());
-                }
-            }
-        }).start();
+        newHandler.loopForPathQueryUpdate(eventSink, sse);
+        newHandler.loopForResourceQueryUpdate(eventSink, sse);
     }
 
     @Path(CONTROL_STREAM_ROUTE)
