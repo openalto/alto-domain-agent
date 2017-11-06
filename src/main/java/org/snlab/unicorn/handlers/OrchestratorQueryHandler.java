@@ -29,6 +29,7 @@ public class OrchestratorQueryHandler {
     private static Map<String, OrchestratorQueryHandler> handlerMap = new HashMap<>();
     private String identifier;
     private ControllerAdapter adapter;
+    private Set<String> queryIds = new HashSet<>();
 
     private OrchestratorQueryHandler(String identifier, ControllerAdapter adapter) {
         this.identifier = identifier;
@@ -145,8 +146,17 @@ public class OrchestratorQueryHandler {
         Set<QueryItem> items;
         try {
             items = parseBody(body);
-        } catch (UnknownQueryAction | UnknownProtocol | UnknownQueryType exception) {
-            exception.printStackTrace();
+            /**
+             * Only keeping QueryItems is not enough.
+             * Handler needs query-id and query-type to replay query
+             * and send the result to the update stream.
+             *
+             * TODO:
+             *   1) Change QueryDataProvider to record query;
+             *   2) Record query-id set in each handler.
+             */
+        } catch (UnknownQueryAction | UnknownProtocol | UnknownQueryType e) {
+            LOG.error("Invalid query body:", e);
             return "{\"meta\": { \"code\": \"Unknown type\"}}";
         }
         if (items.size() == 0){

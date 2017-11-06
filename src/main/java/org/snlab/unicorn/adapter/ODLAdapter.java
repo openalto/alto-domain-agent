@@ -62,10 +62,12 @@ public class ODLAdapter implements ControllerAdapter {
     }
 
     private PathQueryResponseBody convertJsonStringToPathQueryResponse(String data) {
+        // TODO: convert path query response from the json string
         return new PathQueryResponseBody();
     }
 
     private ResourceQueryResponseBody convertJsonStringToResourceQueryResponse(String data) {
+        // TODO: convert resource query response from the json string
         return new ResourceQueryResponseBody();
     }
 
@@ -74,7 +76,7 @@ public class ODLAdapter implements ControllerAdapter {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_PATH_QUERY_URI, querySet.toString()));
             if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
-                return new PathQueryResponseBody();
+                return null;
             } else {
                 return convertJsonStringToPathQueryResponse(response.returnContent().asString());
             }
@@ -89,7 +91,7 @@ public class ODLAdapter implements ControllerAdapter {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_RESOURCE_QUERY_URI, querySet.toString()));
             if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
-                return new ResourceQueryResponseBody();
+                return null;
             } else {
                 return convertJsonStringToResourceQueryResponse(response.returnContent().asString());
             }
@@ -104,14 +106,16 @@ public class ODLAdapter implements ControllerAdapter {
         if (isAsPathChanged == true) {
             isAsPathChanged = false;
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     @Override
     public boolean ifResourceChangedThenCleanState() {
-        if (pathManagerSocketClient != null) {
+        if (isResourceChanged == true) {
+            isResourceChanged = false;
+            return true;
+        } else if (pathManagerSocketClient != null) {
             return pathManagerSocketClient.readStateAndClean();
         }
         return false;
