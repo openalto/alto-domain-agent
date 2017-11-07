@@ -47,7 +47,7 @@ public class MockAdapter implements ControllerAdapter {
         for (int i = 0; i < aneNum; i++) {
             Ane ane = new Ane();
             ane.setAvailbw(randomGen.nextLong());
-            anes.add(new Ane());
+            anes.add(ane);
             List<AneMatrix> matrixRow = new ArrayList<>();
             for (QueryItem item : querySet) {
                 AneMatrix matrixElem = new AneMatrix();

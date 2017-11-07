@@ -96,7 +96,7 @@ public class UnicornService {
         OrchestratorQueryHandler newHandler = OrchestratorQueryHandler.getHandler(newControlStreamId.toString());
         eventSink.send(sse.newEventBuilder()
                 .name(UPDATES_STREAM_CONTROL_TYPE)
-                .data(Paths.get(uriInfo.getBaseUri().toString(), "unicorn", CONTROL_STREAM_ROUTE,
+                .data(uriInfo.getBaseUri().toString() + Paths.get("unicorn", CONTROL_STREAM_ROUTE,
                         newControlStreamId.toString()).toString())
                 .build());
         newHandler.loopForQueryUpdate(eventSink, sse);
