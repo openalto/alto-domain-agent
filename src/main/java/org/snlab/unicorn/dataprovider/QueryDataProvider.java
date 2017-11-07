@@ -2,8 +2,8 @@ package org.snlab.unicorn.dataprovider;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -43,7 +43,7 @@ public class QueryDataProvider {
         }
     }
 
-    public Set<QueryItem> getItems(String id) {
+    public List<QueryItem> getItems(String id) {
         return this.queryMap.get(id).getQueryDesc();
     }
 
