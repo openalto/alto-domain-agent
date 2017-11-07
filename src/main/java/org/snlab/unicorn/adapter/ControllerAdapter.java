@@ -1,6 +1,6 @@
 package org.snlab.unicorn.adapter;
 
-import java.util.Set;
+import java.util.List;
 
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.QueryItem;
@@ -17,14 +17,14 @@ public interface ControllerAdapter {
      * @param querySet a set of query descriptor
      * @return the response of path query
      */
-    public PathQueryResponseBody getAsPath(Set<QueryItem> querySet);
+    public PathQueryResponseBody getAsPath(List<QueryItem> querySet);
 
     /**
      * Implements stateless resource query API.
      * @param querySet a set of query descriptor
      * @return the response of resource query
      */
-    public ResourceQueryResponseBody getResource(Set<QueryItem> querySet);
+    public ResourceQueryResponseBody getResource(List<QueryItem> querySet);
 
     /**
      * Check if as-path changed and then clean the state for stateful path query API.

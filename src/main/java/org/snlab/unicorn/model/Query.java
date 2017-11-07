@@ -1,7 +1,7 @@
 package org.snlab.unicorn.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,7 +13,7 @@ public class Query {
     private QueryAction action;
     private String queryId;
     private QueryType queryType;
-    private Set<QueryItem> queryDesc = new HashSet<>();
+    private List<QueryItem> queryDesc = new ArrayList<>();
 
     @JsonGetter("action")
     public QueryAction getAction() {
@@ -46,25 +46,27 @@ public class Query {
     }
 
     @JsonGetter("query-desc")
-    public Set<QueryItem> getQueryDesc() {
+    public List<QueryItem> getQueryDesc() {
         return queryDesc;
     }
 
     @JsonSetter("query-desc")
-    public void setQueryDesc(Set<QueryItem> queryDesc) {
+    public void setQueryDesc(List<QueryItem> queryDesc) {
         this.queryDesc = queryDesc;
     }
 
     public Query manipulate(){
         //Find query id in query data provider
-        Set<QueryItem> items;
+        List<QueryItem> items;
         Query query;
-        if(QueryDataProvider.getInstance().hasQuery(this.queryId)) {
+        if (QueryDataProvider.getInstance().hasQuery(this.queryId)) {
             query = QueryDataProvider.getInstance().getQuery(this.queryId);
             items = query.getQueryDesc();
         }
         else {
-            query = this;
+            query = new Query();
+            query.setQueryId(this.queryId);
+            query.setQueryType(this.queryType);
             QueryDataProvider.getInstance().addQuery(this.queryId, query);
             items = query.getQueryDesc();
         }

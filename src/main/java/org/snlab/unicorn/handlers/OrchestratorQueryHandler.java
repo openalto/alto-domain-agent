@@ -2,10 +2,12 @@ package org.snlab.unicorn.handlers;
 
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -69,7 +71,6 @@ public class OrchestratorQueryHandler {
     }
 
     private Query parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {
-        Set<QueryItem> items;
         JsonReader jsonReader = Json.createReader(new StringReader(body));
         JsonObject object = jsonReader.readObject();
         Query query = new Query();
@@ -115,7 +116,7 @@ public class OrchestratorQueryHandler {
         }
 
         // Get query items
-        Set<QueryItem> queryItems = new HashSet<>();
+        List<QueryItem> queryItems = new ArrayList<>();
         JsonArray queryDesc = object.getJsonArray("query-desc");
         for (JsonObject queryItem : queryDesc.getValuesAs(JsonObject.class)) {
             QueryItem item = new QueryItem();
@@ -157,7 +158,7 @@ public class OrchestratorQueryHandler {
 
     public String handle(String body) {
         Query query;
-        Set<QueryItem> items;
+        List<QueryItem> items;
         try {
             query = parseBody(body);
             items = query.getQueryDesc();
