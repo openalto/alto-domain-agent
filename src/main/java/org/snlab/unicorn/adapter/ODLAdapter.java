@@ -3,7 +3,7 @@ package org.snlab.unicorn.adapter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -13,9 +13,9 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snlab.unicorn.model.odl.PathQueryResponse;
-import org.snlab.unicorn.model.odl.QueryDesc;
-import org.snlab.unicorn.model.odl.ResourceQueryResponse;
+import org.snlab.unicorn.model.PathQueryResponseBody;
+import org.snlab.unicorn.model.QueryItem;
+import org.snlab.unicorn.model.ResourceQueryResponseBody;
 
 public class ODLAdapter implements ControllerAdapter {
 
@@ -61,20 +61,22 @@ public class ODLAdapter implements ControllerAdapter {
         }
     }
 
-    private PathQueryResponse convertJsonStringToPathQueryResponse(String data) {
-        return new PathQueryResponse();
+    private PathQueryResponseBody convertJsonStringToPathQueryResponse(String data) {
+        // TODO: convert path query response from the json string
+        return new PathQueryResponseBody();
     }
 
-    private ResourceQueryResponse convertJsonStringToResourceQueryResponse(String data) {
-        return new ResourceQueryResponse();
+    private ResourceQueryResponseBody convertJsonStringToResourceQueryResponse(String data) {
+        // TODO: convert resource query response from the json string
+        return new ResourceQueryResponseBody();
     }
 
-    public PathQueryResponse getAsPath(List<QueryDesc> querySet) {
+    public PathQueryResponseBody getAsPath(Set<QueryItem> querySet) {
         try {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_PATH_QUERY_URI, querySet.toString()));
             if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
-                return new PathQueryResponse();
+                return null;
             } else {
                 return convertJsonStringToPathQueryResponse(response.returnContent().asString());
             }
@@ -84,12 +86,12 @@ public class ODLAdapter implements ControllerAdapter {
         return null;
     }
 
-    public ResourceQueryResponse getResource(List<QueryDesc> querySet) {
+    public ResourceQueryResponseBody getResource(Set<QueryItem> querySet) {
         try {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_RESOURCE_QUERY_URI, querySet.toString()));
             if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
-                return new ResourceQueryResponse();
+                return null;
             } else {
                 return convertJsonStringToResourceQueryResponse(response.returnContent().asString());
             }
@@ -104,14 +106,16 @@ public class ODLAdapter implements ControllerAdapter {
         if (isAsPathChanged == true) {
             isAsPathChanged = false;
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     @Override
     public boolean ifResourceChangedThenCleanState() {
-        if (pathManagerSocketClient != null) {
+        if (isResourceChanged == true) {
+            isResourceChanged = false;
+            return true;
+        } else if (pathManagerSocketClient != null) {
             return pathManagerSocketClient.readStateAndClean();
         }
         return false;

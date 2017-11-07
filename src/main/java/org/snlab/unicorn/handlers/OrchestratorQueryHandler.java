@@ -1,6 +1,30 @@
 package org.snlab.unicorn.handlers;
 
 
+import java.io.StringReader;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.sse.Sse;
+import javax.ws.rs.sse.SseEventSink;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.snlab.unicorn.adapter.ControllerAdapter;
+import org.snlab.unicorn.dataprovider.QueryDataProvider;
 import org.snlab.unicorn.exceptions.UnknownProtocol;
 import org.snlab.unicorn.exceptions.UnknownQueryAction;
 import org.snlab.unicorn.exceptions.UnknownQueryType;
@@ -8,31 +32,43 @@ import org.snlab.unicorn.model.Flow;
 import org.snlab.unicorn.model.Query;
 import org.snlab.unicorn.model.QueryItem;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 public class OrchestratorQueryHandler {
-    private static Map<String, OrchestratorQueryHandler> handlerMap = new HashMap<>();
-    private String identifier;
+    private final static Logger LOG = LoggerFactory.getLogger(OrchestratorQueryHandler.class);
 
-    public OrchestratorQueryHandler(String identifier) {
+    private static Map<String, OrchestratorQueryHandler> handlerMap = new HashMap<>();
+    private static ObjectMapper mapper = new ObjectMapper();
+    private String identifier;
+    private ControllerAdapter adapter;
+    private Set<String> queryIds = new HashSet<>();
+    private Thread pathQueryLoop;
+    private Thread resourceQueryLoop;
+    private Queue<String> requiredQueryIds = new LinkedList<>();
+
+    private OrchestratorQueryHandler(String identifier, ControllerAdapter adapter) {
         this.identifier = identifier;
+        this.adapter = adapter;
+    }
+
+    public static boolean setHandler(String identifier, ControllerAdapter adapter) {
+        boolean result = true;
+        if (handlerMap.containsKey(identifier)) {
+            LOG.info("Identifier is existing. Cannot put a new handler.");
+            result = false;
+        } else {
+            handlerMap.put(identifier, new OrchestratorQueryHandler(identifier, adapter));
+        }
+        return result;
     }
 
     public static OrchestratorQueryHandler getHandler(String identifier) {
-        if (!handlerMap.containsKey(identifier))
-            handlerMap.put(identifier, new OrchestratorQueryHandler(identifier));
         return handlerMap.get(identifier);
     }
 
-    private Set<QueryItem> parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {
+    public static Collection<OrchestratorQueryHandler> getAllHandlers() {
+        return handlerMap.values();
+    }
+
+    private Query parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {
         Set<QueryItem> items;
         JsonReader jsonReader = Json.createReader(new StringReader(body));
         JsonObject object = jsonReader.readObject();
@@ -120,18 +156,101 @@ public class OrchestratorQueryHandler {
     }
 
     public String handle(String body) {
+        Query query;
         Set<QueryItem> items;
         try {
-            items = parseBody(body);
-        } catch (UnknownQueryAction | UnknownProtocol | UnknownQueryType exception) {
-            exception.printStackTrace();
+            query = parseBody(body);
+            items = query.getQueryDesc();
+        } catch (UnknownQueryAction | UnknownProtocol | UnknownQueryType e) {
+            LOG.error("Invalid query body:", e);
             return "{\"meta\": { \"code\": \"Unknown type\"}}";
         }
+        queryIds.add(query.getQueryId());
         if (items.size() == 0){
             return "{\"meta\": { \"code\": \"success\"}}";
         }
 
-        //TODO: Handle QueryItems
+        requireQuery(query.getQueryId());
         return "{\"meta\": { \"code\": \"success\"}}";
+    }
+
+    /**
+     * Play a query record with controller adapter by a given query id.
+     * @param id the query id.
+     * @return the query result from controller adapter.
+     */
+    public String doQuery(String id) {
+        Query query = QueryDataProvider.getInstance().getQuery(id);
+        String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
+        switch (query.getQueryType()) {
+            case PATH_QUERY:
+                try {
+                    result = mapper.writeValueAsString(adapter.getAsPath(query.getQueryDesc()));
+                } catch (JsonProcessingException e) {
+                    LOG.error("Invalid json string:", e);
+                }
+                break;
+            case RESOURCE_QUERY:
+                try {
+                    result = mapper.writeValueAsString(adapter.getResource(query.getQueryDesc()));
+                } catch (JsonProcessingException e) {
+                    LOG.error("Invalid json string:", e);
+                }
+        }
+        return result;
+    }
+
+    private void requireQuery(String id) {
+        // TODO: unsafe without lock
+        requiredQueryIds.add(id);
+    }
+
+    private Set<String> getRequiredQueries(Set<String> queries) {
+        // TODO: unsafe without lock
+        while (!requiredQueryIds.isEmpty()) {
+            queries.add(requiredQueryIds.poll());
+        }
+        return queries;
+    }
+
+    public void loopForQueryUpdate(SseEventSink eventSink, Sse sse) {
+        if (pathQueryLoop == null) {
+            pathQueryLoop = new Thread(() -> {
+                Set<String> currentQueryIds = new HashSet<>();
+                while (true) {
+                    currentQueryIds.clear();
+                    getRequiredQueries(currentQueryIds);
+                    if (adapter.ifAsPathChangedThenCleanState()) {
+                        LOG.debug("As path data changed. Replay all requests.");
+                        currentQueryIds.addAll(queryIds);
+                    }
+                    if (adapter.ifResourceChangedThenCleanState()) {
+                        LOG.debug("Resource data changed. Replay all requests.");
+                        currentQueryIds.addAll(queryIds);
+                    }
+                    for (String id : currentQueryIds) {
+                        String pathQueryResponse = doQuery(id);
+                        eventSink.send(sse.newEventBuilder()
+                                .name(MediaType.APPLICATION_JSON)
+                                .data(pathQueryResponse)
+                                .build());
+                    }
+                }
+            });
+            pathQueryLoop.start();
+        } else {
+            LOG.info("The path query loop has been running. [handler: {}]", identifier);
+        }
+    }
+
+    public void stop() {
+        if (pathQueryLoop != null) {
+            pathQueryLoop.interrupt();
+            pathQueryLoop = null;
+        }
+        if (resourceQueryLoop != null) {
+            resourceQueryLoop.interrupt();
+            resourceQueryLoop = null;
+        }
     }
 }

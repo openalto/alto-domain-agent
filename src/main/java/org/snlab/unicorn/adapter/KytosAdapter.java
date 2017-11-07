@@ -1,20 +1,21 @@
 package org.snlab.unicorn.adapter;
 
-import java.util.List;
-import org.snlab.unicorn.model.odl.PathQueryResponse;
-import org.snlab.unicorn.model.odl.QueryDesc;
-import org.snlab.unicorn.model.odl.ResourceQueryResponse;
+import java.util.Set;
+
+import org.snlab.unicorn.model.PathQueryResponseBody;
+import org.snlab.unicorn.model.QueryItem;
+import org.snlab.unicorn.model.ResourceQueryResponseBody;
 
 public class KytosAdapter implements ControllerAdapter {
 
     @Override
-    public PathQueryResponse getAsPath(List<QueryDesc> querySet) {
+    public PathQueryResponseBody getAsPath(Set<QueryItem> querySet) {
         // TODO: Implement stateless unicorn path query API.
         return null;
     }
 
     @Override
-    public ResourceQueryResponse getResource(List<QueryDesc> querySet) {
+    public ResourceQueryResponseBody getResource(Set<QueryItem> querySet) {
         // TODO: Implement stateless unicorn resource query API.
         return null;
     }
