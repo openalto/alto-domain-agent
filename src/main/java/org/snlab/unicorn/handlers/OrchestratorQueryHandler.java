@@ -31,8 +31,10 @@ import org.snlab.unicorn.exceptions.UnknownProtocol;
 import org.snlab.unicorn.exceptions.UnknownQueryAction;
 import org.snlab.unicorn.exceptions.UnknownQueryType;
 import org.snlab.unicorn.model.Flow;
+import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.Query;
 import org.snlab.unicorn.model.QueryItem;
+import org.snlab.unicorn.model.ResourceQueryResponseBody;
 
 public class OrchestratorQueryHandler {
     private final static Logger LOG = LoggerFactory.getLogger(OrchestratorQueryHandler.class);
@@ -185,20 +187,34 @@ public class OrchestratorQueryHandler {
         String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
         switch (query.getQueryType()) {
             case PATH_QUERY:
-                try {
-                    result = mapper.writeValueAsString(adapter.getAsPath(query.getQueryDesc()));
-                } catch (JsonProcessingException e) {
-                    LOG.error("Invalid json string:", e);
-                }
+                result = doPathQuery(query, result);
                 break;
             case RESOURCE_QUERY:
-                try {
-                    result = mapper.writeValueAsString(adapter.getResource(query.getQueryDesc()));
-                } catch (JsonProcessingException e) {
-                    LOG.error("Invalid json string:", e);
-                }
+                result = doResourceQuery(query, result);
         }
         return result;
+    }
+
+    private String doPathQuery(Query query, String defaultResult) {
+        PathQueryResponseBody body = adapter.getAsPath(query.getQueryDesc());
+        body.setQueryId(query.getQueryId());
+        try {
+            defaultResult = mapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            LOG.error("Invalid json string:", e);
+        }
+        return defaultResult;
+    }
+
+    private String doResourceQuery(Query query, String defaultResult) {
+        ResourceQueryResponseBody body = adapter.getResource(query.getQueryDesc());
+        body.setQueryId(query.getQueryId());
+        try {
+            defaultResult = mapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            LOG.error("Invalid json string:", e);
+        }
+        return defaultResult;
     }
 
     private void requireQuery(String id) {

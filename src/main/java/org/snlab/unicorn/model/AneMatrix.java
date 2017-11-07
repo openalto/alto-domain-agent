@@ -18,7 +18,7 @@ public class AneMatrix {
      * (Required)
      */
     @JsonProperty("flow-id")
-    private Integer flowId;
+    private String flowId;
 
     @JsonProperty("coefficient")
     public Double getCoefficient() {
@@ -31,12 +31,12 @@ public class AneMatrix {
     }
 
     @JsonProperty("flow-id")
-    public Integer getFlowId() {
+    public String getFlowId() {
         return flowId;
     }
 
     @JsonProperty("flow-id")
-    public void setFlowId(Integer flowId) {
+    public void setFlowId(String flowId) {
         this.flowId = flowId;
     }
 
