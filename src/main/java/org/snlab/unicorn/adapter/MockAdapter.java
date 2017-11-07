@@ -35,10 +35,10 @@ public class MockAdapter implements ControllerAdapter {
     }
 
     @Override
-    public PathQueryResponseBody getAsPath(List<QueryItem> querySet) {
+    public PathQueryResponseBody getAsPath(List<QueryItem> queryDescs) {
         PathQueryResponseBody body = new PathQueryResponseBody();
         List<String> response = new ArrayList<>();
-        for (int i = 0; i < querySet.size(); i++) {
+        for (int i = 0; i < queryDescs.size(); i++) {
             try {
                 byte[] address = new byte[4];
                 randomGen.nextBytes(address);
@@ -52,7 +52,7 @@ public class MockAdapter implements ControllerAdapter {
     }
 
     @Override
-    public ResourceQueryResponseBody getResource(List<QueryItem> querySet) {
+    public ResourceQueryResponseBody getResource(List<QueryItem> queryDescs) {
         ResourceQueryResponseBody body = new ResourceQueryResponseBody();
         ResourceQueryResponse response = new ResourceQueryResponse();
 
@@ -64,7 +64,7 @@ public class MockAdapter implements ControllerAdapter {
             ane.setAvailbw(randomGen.nextInt(100000000) * 1000L);
             anes.add(ane);
             List<AneMatrix> matrixRow = new ArrayList<>();
-            for (QueryItem item : querySet) {
+            for (QueryItem item : queryDescs) {
                 AneMatrix matrixElem = new AneMatrix();
                 matrixElem.setFlowId(item.getFlow().getFlowId());
                 matrixElem.setCoefficient(randomGen.nextDouble());

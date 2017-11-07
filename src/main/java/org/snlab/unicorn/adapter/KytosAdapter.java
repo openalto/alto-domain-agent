@@ -9,13 +9,13 @@ import org.snlab.unicorn.model.ResourceQueryResponseBody;
 public class KytosAdapter implements ControllerAdapter {
 
     @Override
-    public PathQueryResponseBody getAsPath(List<QueryItem> querySet) {
+    public PathQueryResponseBody getAsPath(List<QueryItem> queryDescs) {
         // TODO: Implement stateless unicorn path query API.
         return null;
     }
 
     @Override
-    public ResourceQueryResponseBody getResource(List<QueryItem> querySet) {
+    public ResourceQueryResponseBody getResource(List<QueryItem> queryDescs) {
         // TODO: Implement stateless unicorn resource query API.
         return null;
     }
