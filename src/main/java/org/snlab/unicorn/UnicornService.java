@@ -23,6 +23,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.adapter.ControllerAdapter;
+import org.snlab.unicorn.adapter.MockAdapter;
 import org.snlab.unicorn.adapter.ODLAdapter;
 import org.snlab.unicorn.handlers.OrchestratorQueryHandler;
 
@@ -41,6 +42,7 @@ public class UnicornService {
     private final static String PARAMETER_NAME_ADAPTER_AUTH_USERNAME = "adapter.auth.username";
     private final static String PARAMETER_NAME_ADAPTER_AUTH_PASSWORD = "adapter.auth.password";
     private final static String ADAPTER_TYPE_ODL = "odl"; // Maybe we can use an enum type
+    private final static String ADAPTER_TYPE_MOCK = "mock"; // Maybe we can use an enum type
 
     @Context
     private UriInfo uriInfo;
@@ -58,6 +60,8 @@ public class UnicornService {
 			} catch (URISyntaxException e) {
                 LOG.error("Fail to create adapter: baseUri is invalid!");
 			}
+        } else if (ADAPTER_TYPE_MOCK.equals(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_TYPE))) {
+            adapter = new MockAdapter();
         }
         return adapter;
     }
@@ -92,7 +96,7 @@ public class UnicornService {
         OrchestratorQueryHandler newHandler = OrchestratorQueryHandler.getHandler(newControlStreamId.toString());
         eventSink.send(sse.newEventBuilder()
                 .name(UPDATES_STREAM_CONTROL_TYPE)
-                .data(Paths.get(uriInfo.getBaseUri().toString(), "unicorn", CONTROL_STREAM_ROUTE,
+                .data(uriInfo.getBaseUri().toString() + Paths.get("unicorn", CONTROL_STREAM_ROUTE,
                         newControlStreamId.toString()).toString())
                 .build());
         newHandler.loopForQueryUpdate(eventSink, sse);

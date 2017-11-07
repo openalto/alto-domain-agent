@@ -1,8 +1,7 @@
 package org.snlab.unicorn.handlers;
 
 
-import java.io.StringReader;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,10 +11,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseEventSink;
@@ -27,12 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.adapter.ControllerAdapter;
 import org.snlab.unicorn.dataprovider.QueryDataProvider;
-import org.snlab.unicorn.exceptions.UnknownProtocol;
-import org.snlab.unicorn.exceptions.UnknownQueryAction;
-import org.snlab.unicorn.exceptions.UnknownQueryType;
-import org.snlab.unicorn.model.Flow;
+import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.Query;
 import org.snlab.unicorn.model.QueryItem;
+import org.snlab.unicorn.model.ResourceQueryResponseBody;
 
 public class OrchestratorQueryHandler {
     private final static Logger LOG = LoggerFactory.getLogger(OrchestratorQueryHandler.class);
@@ -70,89 +63,9 @@ public class OrchestratorQueryHandler {
         return handlerMap.values();
     }
 
-    private Query parseBody(String body) throws UnknownQueryAction, UnknownQueryType, UnknownProtocol {
-        JsonReader jsonReader = Json.createReader(new StringReader(body));
-        JsonObject object = jsonReader.readObject();
-        Query query = new Query();
-
-        // Get query id
-        String queryId = object.getString("query-id");
-
-        // Get query action
-        String actionString = object.getString("action");
-        Query.QueryAction action;
-        switch (actionString) {
-            case "add":
-                action = Query.QueryAction.ADD;
-                break;
-            case "delete":
-                action = Query.QueryAction.DELETE;
-                break;
-            case "merge":
-                action = Query.QueryAction.MERGE;
-                break;
-            case "erase":
-                action = Query.QueryAction.ERASE;
-                break;
-            case "new":
-                action = Query.QueryAction.NEW;
-                break;
-            default:
-                throw new UnknownQueryAction();
-        }
-
-        // Get query type
-        String queryTypeString = object.getString("query-type");
-        Query.QueryType queryType;
-        switch (queryTypeString) {
-            case "path-query":
-                queryType = Query.QueryType.PATH_QUERY;
-                break;
-            case "resource-query":
-                queryType = Query.QueryType.RESOURCE_QUERY;
-                break;
-            default:
-                throw new UnknownQueryType();
-        }
-
-        // Get query items
-        List<QueryItem> queryItems = new ArrayList<>();
-        JsonArray queryDesc = object.getJsonArray("query-desc");
-        for (JsonObject queryItem : queryDesc.getValuesAs(JsonObject.class)) {
-            QueryItem item = new QueryItem();
-            Flow flow = new Flow();
-            flow.setFlowId(queryItem.getString("flow-id"));
-            if (queryItem.containsKey("src-ip"))
-                flow.setSrcIp(queryItem.getString("src-ip"));
-            if (queryItem.containsKey("dst-ip"))
-                flow.setDstIp(queryItem.getString("dst-ip"));
-            if (queryItem.containsKey("dst-port"))
-                flow.setDstPort(queryItem.getString("dst-port"));
-            String protocol = queryItem.getString("protocol");
-            switch (protocol) {
-                case "tcp":
-                    flow.setProtocol(Flow.Protocol.TCP);
-                    break;
-                case "udp":
-                    flow.setProtocol(Flow.Protocol.UDP);
-                    break;
-                case "sctp":
-                    flow.setProtocol(Flow.Protocol.SCTP);
-                    break;
-                default:
-                    throw new UnknownProtocol();
-            }
-            item.setFlow(flow);
-            item.setIngressPoint(queryItem.getString("ingress-point"));
-            queryItems.add(item);
-        }
-
-        // Set all fileds
-        query.setQueryId(queryId);
-        query.setQueryDesc(queryItems);
-        query.setAction(action);
-        query.setQueryType(queryType);
-
+    private Query parseBody(String body) throws IOException {
+        Query query;
+        query = mapper.readValue(body, Query.class);
         return query.manipulate();
     }
 
@@ -162,7 +75,7 @@ public class OrchestratorQueryHandler {
         try {
             query = parseBody(body);
             items = query.getQueryDesc();
-        } catch (UnknownQueryAction | UnknownProtocol | UnknownQueryType e) {
+        } catch (IOException e) {
             LOG.error("Invalid query body:", e);
             return "{\"meta\": { \"code\": \"Unknown type\"}}";
         }
@@ -185,31 +98,48 @@ public class OrchestratorQueryHandler {
         String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
         switch (query.getQueryType()) {
             case PATH_QUERY:
-                try {
-                    result = mapper.writeValueAsString(adapter.getAsPath(query.getQueryDesc()));
-                } catch (JsonProcessingException e) {
-                    LOG.error("Invalid json string:", e);
-                }
+                result = doPathQuery(query, result);
                 break;
             case RESOURCE_QUERY:
-                try {
-                    result = mapper.writeValueAsString(adapter.getResource(query.getQueryDesc()));
-                } catch (JsonProcessingException e) {
-                    LOG.error("Invalid json string:", e);
-                }
+                result = doResourceQuery(query, result);
         }
         return result;
+    }
+
+    private String doPathQuery(Query query, String defaultResult) {
+        PathQueryResponseBody body = adapter.getAsPath(query.getQueryDesc());
+        body.setQueryId(query.getQueryId());
+        try {
+            defaultResult = mapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            LOG.error("Invalid json string:", e);
+        }
+        return defaultResult;
+    }
+
+    private String doResourceQuery(Query query, String defaultResult) {
+        ResourceQueryResponseBody body = adapter.getResource(query.getQueryDesc());
+        body.setQueryId(query.getQueryId());
+        try {
+            defaultResult = mapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            LOG.error("Invalid json string:", e);
+        }
+        return defaultResult;
     }
 
     private void requireQuery(String id) {
         // TODO: unsafe without lock
         requiredQueryIds.add(id);
+        LOG.info("Require a new query to handle. id: {}", id);
     }
 
     private Set<String> getRequiredQueries(Set<String> queries) {
         // TODO: unsafe without lock
         while (!requiredQueryIds.isEmpty()) {
-            queries.add(requiredQueryIds.poll());
+            String id = requiredQueryIds.poll();
+            LOG.info("Fetch a new query from required queue. id: {}", id);
+            queries.add(id);
         }
         return queries;
     }
@@ -222,14 +152,15 @@ public class OrchestratorQueryHandler {
                     currentQueryIds.clear();
                     getRequiredQueries(currentQueryIds);
                     if (adapter.ifAsPathChangedThenCleanState()) {
-                        LOG.debug("As path data changed. Replay all requests.");
+                        LOG.info("As path data changed. Replay all requests.");
                         currentQueryIds.addAll(queryIds);
                     }
                     if (adapter.ifResourceChangedThenCleanState()) {
-                        LOG.debug("Resource data changed. Replay all requests.");
+                        LOG.info("Resource data changed. Replay all requests.");
                         currentQueryIds.addAll(queryIds);
                     }
                     for (String id : currentQueryIds) {
+                        LOG.info("Going to handle a query. id: {}", id);
                         String pathQueryResponse = doQuery(id);
                         eventSink.send(sse.newEventBuilder()
                                 .name(MediaType.APPLICATION_JSON)

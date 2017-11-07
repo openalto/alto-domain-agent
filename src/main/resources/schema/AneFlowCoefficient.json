@@ -5,8 +5,7 @@
       "type": "number"
     },
     "flow-id": {
-      "format": "int32",
-      "type": "integer"
+      "type": "string"
     }
   },
   "required": [

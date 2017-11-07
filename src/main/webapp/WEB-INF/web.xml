@@ -23,9 +23,9 @@
         <url-pattern>/experimental/v1/*</url-pattern>
     </servlet-mapping>
     <context-param>
-        <description>The value of adapter.type can be one of {odl, kytos} now</description>
+        <description>The value of adapter.type can be one of {odl, kytos, mock} now</description>
         <param-name>adapter.type</param-name>
-        <param-value>odl</param-value>
+        <param-value>mock</param-value>
     </context-param>
     <context-param>
         <description>Base uri for controller restful api</description>
