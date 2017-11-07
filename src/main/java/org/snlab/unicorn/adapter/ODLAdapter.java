@@ -120,16 +120,4 @@ public class ODLAdapter implements ControllerAdapter {
         }
         return false;
     }
-
-    @Override
-    public void requirePathQuery() {
-        // TODO: Add lock for the signal change
-        isAsPathChanged = true;
-    }
-
-    @Override
-    public void requireResourceQuery() {
-        // TODO: Add lock for the signal change
-        isResourceChanged = true;
-    }
 }

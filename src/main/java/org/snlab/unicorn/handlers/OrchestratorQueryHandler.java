@@ -5,7 +5,9 @@ import java.io.StringReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.json.Json;
@@ -40,6 +42,7 @@ public class OrchestratorQueryHandler {
     private Set<String> queryIds = new HashSet<>();
     private Thread pathQueryLoop;
     private Thread resourceQueryLoop;
+    private Queue<String> requiredQueryIds = new LinkedList<>();
 
     private OrchestratorQueryHandler(String identifier, ControllerAdapter adapter) {
         this.identifier = identifier;
@@ -167,13 +170,7 @@ public class OrchestratorQueryHandler {
             return "{\"meta\": { \"code\": \"success\"}}";
         }
 
-        switch (query.getQueryType()) {
-            case PATH_QUERY:
-                adapter.requirePathQuery();
-                break;
-            case RESOURCE_QUERY:
-                adapter.requireResourceQuery();
-        }
+        requireQuery(query.getQueryId());
         return "{\"meta\": { \"code\": \"success\"}}";
     }
 
@@ -203,14 +200,35 @@ public class OrchestratorQueryHandler {
         return result;
     }
 
-    public void loopForPathQueryUpdate(SseEventSink eventSink, Sse sse) {
+    private void requireQuery(String id) {
+        // TODO: unsafe without lock
+        requiredQueryIds.add(id);
+    }
+
+    private Set<String> getRequiredQueries(Set<String> queries) {
+        // TODO: unsafe without lock
+        while (!requiredQueryIds.isEmpty()) {
+            queries.add(requiredQueryIds.poll());
+        }
+        return queries;
+    }
+
+    public void loopForQueryUpdate(SseEventSink eventSink, Sse sse) {
         if (pathQueryLoop == null) {
             pathQueryLoop = new Thread(() -> {
+                Set<String> currentQueryIds = new HashSet<>();
                 while (true) {
+                    currentQueryIds.clear();
+                    getRequiredQueries(currentQueryIds);
                     if (adapter.ifAsPathChangedThenCleanState()) {
-                        LOG.debug("As path data or request changed. Replay request.");
-                        // TODO: Get query-id from somewhere
-                        String id = "";
+                        LOG.debug("As path data changed. Replay all requests.");
+                        currentQueryIds.addAll(queryIds);
+                    }
+                    if (adapter.ifResourceChangedThenCleanState()) {
+                        LOG.debug("Resource data changed. Replay all requests.");
+                        currentQueryIds.addAll(queryIds);
+                    }
+                    for (String id : currentQueryIds) {
                         String pathQueryResponse = doQuery(id);
                         eventSink.send(sse.newEventBuilder()
                                 .name(MediaType.APPLICATION_JSON)
@@ -222,28 +240,6 @@ public class OrchestratorQueryHandler {
             pathQueryLoop.start();
         } else {
             LOG.info("The path query loop has been running. [handler: {}]", identifier);
-        }
-    }
-
-    public void loopForResourceQueryUpdate(SseEventSink eventSink, Sse sse) {
-        if (resourceQueryLoop == null) {
-            resourceQueryLoop = new Thread(() -> {
-                while (true) {
-                    if (adapter.ifResourceChangedThenCleanState()) {
-                        LOG.debug("Resource data or request changed. Replay request.");
-                        // TODO: Get query-id from somewhere
-                        String id = "";
-                        String resourceQueryResponse = doQuery(id);
-                        eventSink.send(sse.newEventBuilder()
-                                .name(MediaType.APPLICATION_JSON)
-                                .data(resourceQueryResponse)
-                                .build());
-                    }
-                }
-            });
-            resourceQueryLoop.start();
-        } else {
-            LOG.info("The resource query loop has been running. [handler: {}]", identifier);
         }
     }
 

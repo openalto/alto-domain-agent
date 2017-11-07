@@ -35,14 +35,4 @@ public interface ControllerAdapter {
      * Check if resource changed and then clean the state for stateful resource query API.
      */
     public boolean ifResourceChangedThenCleanState();
-
-    /**
-     * Set a signal to trigger path query event.
-     */
-    public void requirePathQuery();
-
-    /**
-     * Set a signal to trigger resource query event.
-     */
-    public void requireResourceQuery();
 }

@@ -97,8 +97,7 @@ public class UnicornService {
                 .data(Paths.get(uriInfo.getBaseUri().toString(), "unicorn", CONTROL_STREAM_ROUTE,
                         newControlStreamId.toString()).toString())
                 .build());
-        newHandler.loopForPathQueryUpdate(eventSink, sse);
-        newHandler.loopForResourceQueryUpdate(eventSink, sse);
+        newHandler.loopForQueryUpdate(eventSink, sse);
     }
 
     @Path(CONTROL_STREAM_ROUTE)

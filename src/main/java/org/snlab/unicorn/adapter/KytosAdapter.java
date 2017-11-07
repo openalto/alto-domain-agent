@@ -31,14 +31,4 @@ public class KytosAdapter implements ControllerAdapter {
         // TODO: Inject a callback. Once receiving resource changed notification, call the method.
         return false;
     }
-
-    @Override
-    public void requirePathQuery() {
-        // TODO: Send an event to adapter to make it do a path query.
-    }
-
-    @Override
-    public void requireResourceQuery() {
-        // TODO: Send an event to adapter to make it do a resource query.
-    }
 }
