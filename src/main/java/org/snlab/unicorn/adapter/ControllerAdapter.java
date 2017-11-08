@@ -14,17 +14,17 @@ public interface ControllerAdapter {
 
     /**
      * Implements stateless path query API.
-     * @param querySet a set of query descriptor
+     * @param queryDescs a set of query descriptor
      * @return the response of path query
      */
-    public PathQueryResponseBody getAsPath(List<QueryItem> querySet);
+    public PathQueryResponseBody getAsPath(List<QueryItem> queryDescs);
 
     /**
      * Implements stateless resource query API.
-     * @param querySet a set of query descriptor
+     * @param queryDescs a set of query descriptor
      * @return the response of resource query
      */
-    public ResourceQueryResponseBody getResource(List<QueryItem> querySet);
+    public ResourceQueryResponseBody getResource(List<QueryItem> queryDescs);
 
     /**
      * Check if as-path changed and then clean the state for stateful path query API.
