@@ -4,6 +4,7 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonString;
 import javax.json.JsonValue;
 import java.io.InputStream;
 
@@ -20,12 +21,12 @@ public class ServerInfoReader {
 
         JsonArray hosts = obj.getJsonArray("hosts");
         for (JsonValue host : hosts) {
-            info.addHost(host.toString());
+            info.addHost(((JsonString)host).getString());
         }
 
         JsonArray ingressPoints = obj.getJsonArray("ingress-points");
         for (JsonValue ingressPoint : ingressPoints) {
-            info.addIngressPoint(ingressPoint.toString());
+            info.addIngressPoint(((JsonString)ingressPoint).getString());
         }
     }
 }
