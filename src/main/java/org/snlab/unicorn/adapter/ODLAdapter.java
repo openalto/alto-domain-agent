@@ -148,6 +148,9 @@ public class ODLAdapter implements ControllerAdapter {
     }
 
     private String getLongestPrefixForIp(String address) {
+        if (address == null) {
+            return null;
+        }
         return address + "/32";
     }
 
