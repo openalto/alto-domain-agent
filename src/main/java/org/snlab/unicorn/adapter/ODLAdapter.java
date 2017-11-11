@@ -147,14 +147,18 @@ public class ODLAdapter implements ControllerAdapter {
         return body;
     }
 
+    private String getLongestPrefixForIp(String address) {
+        return address + "/32";
+    }
+
     private List<ODLQueryDesc> convertToODLQueryDesc(List<QueryItem> queryDescs) {
         List<ODLQueryDesc> odlQueryDescs = new ArrayList<>();
         for (QueryItem item : queryDescs) {
             ODLQueryDesc desc = new ODLQueryDesc();
             desc.setFlowId(Integer.valueOf(item.getFlow().getFlowId()));
             ODLFlowDesc flow = new ODLFlowDesc();
-            flow.setSrcIp(item.getFlow().getSrcIp());
-            flow.setDstIp(item.getFlow().getDstIp());
+            flow.setSrcIp(getLongestPrefixForIp(item.getFlow().getSrcIp()));
+            flow.setDstIp(getLongestPrefixForIp(item.getFlow().getDstIp()));
             flow.setDstPort(item.getFlow().getDstPort());
             flow.setProtocol(item.getFlow().getProtocol());
             desc.setFlow(flow);
