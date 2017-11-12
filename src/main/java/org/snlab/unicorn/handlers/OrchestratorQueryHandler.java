@@ -1,7 +1,6 @@
 package org.snlab.unicorn.handlers;
 
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -50,21 +49,32 @@ public class OrchestratorQueryHandler {
     private static String callNovaForRSA(String response) {
         Runtime runtime = Runtime.getRuntime();
         String command = "nova '" + response + "'";
-        Process process;
-        String newResponse = "";
+        String resultMsg = "";
+        String errorMsg = "";
         String line;
+
         try {
-            process = runtime.exec(command);
-            process.waitFor();
-            BufferedReader bri = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            while ((line = bri.readLine()) != null) {
-                newResponse += line;
+            Process process = runtime.exec(command);
+            BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            while ((line = stdout.readLine()) != null) {
+                resultMsg += line;
             }
+            while ((line = stderr.readLine()) != null) {
+                errorMsg += line;
+            }
+            stderr.close();
+            stdout.close();
+            process.waitFor();
         } catch (IOException | InterruptedException e) {
             LOG.error("Error occurs when executing nova", e);
-            newResponse = response;
+            resultMsg = response;
         }
-        return newResponse;
+        if (!errorMsg.isEmpty()) {
+            LOG.error(errorMsg);
+            resultMsg = response;
+        }
+        return resultMsg;
     }
 
     public static boolean setHandler(String identifier, ControllerAdapter adapter) {
