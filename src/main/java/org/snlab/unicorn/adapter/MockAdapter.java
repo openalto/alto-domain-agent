@@ -27,7 +27,7 @@ public class MockAdapter implements ControllerAdapter {
     private Random randomGen = new Random();
     private boolean changeSignal = false;
 
-    private Map<String, String> pathResult;
+    protected Map<String, String> pathResult;
 
     public MockAdapter() {
         new Thread(() -> {
@@ -45,7 +45,7 @@ public class MockAdapter implements ControllerAdapter {
         configReader(UnicornDefinitions.AdapterConfig.MOCK_CONFIG_PATH);
     }
 
-    private void configReader(String adapterConfigPath) {
+    protected void configReader(String adapterConfigPath) {
         InputStream stream = MockAdapter.class.getClassLoader().getResourceAsStream(adapterConfigPath);
         String domainName = ServerInfo.getInstance().getDomainName();
         JsonObject object = Json.createReader(stream).readObject().getJsonObject(domainName);

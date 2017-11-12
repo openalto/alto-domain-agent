@@ -22,6 +22,7 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snlab.unicorn.UnicornDefinitions;
 import org.snlab.unicorn.model.Ane;
 import org.snlab.unicorn.model.AneMatrix;
 import org.snlab.unicorn.model.PathQueryResponseBody;
@@ -41,7 +42,7 @@ import org.snlab.unicorn.model.odl.ODLResourceQueryInput;
 import org.snlab.unicorn.model.odl.ODLResourceQueryRequest;
 import org.snlab.unicorn.model.odl.ODLResourceQueryResponse;
 
-public class ODLAdapter implements ControllerAdapter {
+public class ODLAdapter extends MockAdapter {
 
     private final static Logger LOG = LoggerFactory.getLogger(ODLAdapter.class);
     private final static String UNICORN_PATH_QUERY_URI = "/operations/alto-unicorn:path-query";
@@ -57,6 +58,9 @@ public class ODLAdapter implements ControllerAdapter {
     private ODLNotificationClient pathManagerSocketClient;
 
     public ODLAdapter(URI baseUri, Credentials auth) {
+        pathResult = new HashMap<>();
+        configReader(UnicornDefinitions.AdapterConfig.MOCK_CONFIG_PATH);
+
         this.baseUri = baseUri;
         if (auth == null) {
             this.auth = new UsernamePasswordCredentials("admin", "admin");
@@ -189,25 +193,27 @@ public class ODLAdapter implements ControllerAdapter {
         return mapper.writeValueAsString(request);
     }
 
-    public PathQueryResponseBody getAsPath(List<QueryItem> queryDescs) {
-        try {
-            Response response = executor
-                    .execute(getRestconfRequest(UNICORN_PATH_QUERY_URI,
-                            convertQueryDescsToPathQueryRequestString(queryDescs)));
-            if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
-                return null;
-            } else {
-                return convertJsonStringToPathQueryResponse(response.returnContent().asString(),
-                        getFlowIdByOrder(queryDescs));
-            }
-        } catch (JsonProcessingException e) {
-            LOG.error("Invalid json value:", e);
-        } catch (IOException e) {
-            LOG.error("Fail to handle http request:", e);
-        }
-        return null;
-    }
+    // @Override
+    // public PathQueryResponseBody getAsPath(List<QueryItem> queryDescs) {
+    //     try {
+    //         Response response = executor
+    //                 .execute(getRestconfRequest(UNICORN_PATH_QUERY_URI,
+    //                         convertQueryDescsToPathQueryRequestString(queryDescs)));
+    //         if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
+    //             return null;
+    //         } else {
+    //             return convertJsonStringToPathQueryResponse(response.returnContent().asString(),
+    //                     getFlowIdByOrder(queryDescs));
+    //         }
+    //     } catch (JsonProcessingException e) {
+    //         LOG.error("Invalid json value:", e);
+    //     } catch (IOException e) {
+    //         LOG.error("Fail to handle http request:", e);
+    //     }
+    //     return null;
+    // }
 
+    @Override
     public ResourceQueryResponseBody getResource(List<QueryItem> queryDescs) {
         try {
             Response response = executor
