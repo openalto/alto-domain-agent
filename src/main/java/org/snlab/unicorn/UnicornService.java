@@ -1,10 +1,12 @@
 package org.snlab.unicorn;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.util.Enumeration;
-import java.util.UUID;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.snlab.unicorn.adapter.ControllerAdapter;
+import org.snlab.unicorn.adapter.MockAdapter;
+import org.snlab.unicorn.adapter.ODLAdapter;
+import org.snlab.unicorn.handlers.OrchestratorQueryHandler;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
@@ -18,14 +20,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseEventSink;
-
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.snlab.unicorn.adapter.ControllerAdapter;
-import org.snlab.unicorn.adapter.MockAdapter;
-import org.snlab.unicorn.adapter.ODLAdapter;
-import org.snlab.unicorn.handlers.OrchestratorQueryHandler;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.Enumeration;
+import java.util.UUID;
 
 /**
  * Root resource (exposed at "unicorn" path)
@@ -37,6 +36,7 @@ public class UnicornService {
     private final static String UPDATES_STREAM_CONTROL_TYPE = "application/updatestreamcontrol";
     private final static String UPDATE_STREAM_ROUTE = "updates";
     private final static String CONTROL_STREAM_ROUTE = "controls";
+    private final static String DEPLOY_ROUTE = "deploys";
     private final static String PARAMETER_NAME_ADAPTER_TYPE = "adapter.type";
     private final static String PARAMETER_NAME_ADAPTER_BASEURI = "adapter.baseUri";
     private final static String PARAMETER_NAME_ADAPTER_AUTH_USERNAME = "adapter.auth.username";
@@ -54,12 +54,12 @@ public class UnicornService {
         ControllerAdapter adapter = null;
         if (ADAPTER_TYPE_ODL.equals(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_TYPE))) {
             try {
-				adapter = new ODLAdapter(new URI(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_BASEURI)),
-                    new UsernamePasswordCredentials(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_USERNAME),
-                            servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_PASSWORD)));
-			} catch (URISyntaxException e) {
+                adapter = new ODLAdapter(new URI(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_BASEURI)),
+                        new UsernamePasswordCredentials(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_USERNAME),
+                                servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_PASSWORD)));
+            } catch (URISyntaxException e) {
                 LOG.error("Fail to create adapter: baseUri is invalid!");
-			}
+            }
         } else if (ADAPTER_TYPE_MOCK.equals(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_TYPE))) {
             adapter = new MockAdapter();
         }
@@ -105,6 +105,16 @@ public class UnicornService {
     @Path(CONTROL_STREAM_ROUTE)
     public ControlServiceResource controlServiceResource() {
         return new ControlServiceResource();
+    }
+
+    @Path(DEPLOY_ROUTE)
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String startDeploy(String body) {
+        // TODO: Handle deploy
+        System.out.println(body);
+        return "{\"meta\":{\"code\": \"success\"} }";
     }
 
     public class ControlServiceResource {

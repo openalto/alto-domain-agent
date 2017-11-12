@@ -3,6 +3,7 @@
   "domain-ip": "127.0.0.1",
   "http-port": 9000,
   "control-url": "/experimental/v1/unicorn/updates",
+  "deploy-url": "/experimental/v1/unicorn/deploys",
   "hosts": [
     "10.0.1.100",
     "10.0.1.101",
