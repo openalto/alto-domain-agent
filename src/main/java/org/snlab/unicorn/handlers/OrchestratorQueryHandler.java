@@ -1,7 +1,10 @@
 package org.snlab.unicorn.handlers;
 
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +45,26 @@ public class OrchestratorQueryHandler {
     private OrchestratorQueryHandler(String identifier, ControllerAdapter adapter) {
         this.identifier = identifier;
         this.adapter = adapter;
+    }
+
+    private static String callNovaForRSA(String response) {
+        Runtime runtime = Runtime.getRuntime();
+        String command = "nova '" + response + "'";
+        Process process;
+        String newResponse = "";
+        String line;
+        try {
+            process = runtime.exec(command);
+            process.waitFor();
+            BufferedReader bri = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            while ((line = bri.readLine()) != null) {
+                newResponse += line;
+            }
+        } catch (IOException | InterruptedException e) {
+            LOG.error("Error occurs when executing nova", e);
+            newResponse = response;
+        }
+        return newResponse;
     }
 
     public static boolean setHandler(String identifier, ControllerAdapter adapter) {
@@ -125,7 +148,7 @@ public class OrchestratorQueryHandler {
         } catch (JsonProcessingException e) {
             LOG.error("Invalid json string:", e);
         }
-        return defaultResult;
+        return callNovaForRSA(defaultResult);
     }
 
     private void requireQuery(String id) {
