@@ -9,6 +9,7 @@ public class ServerInfo {
     private static ServerInfo instance = null;
     protected String domainName;
     protected String updateURL;
+    protected String deployURL;
     protected String domainIp;
     protected int httpPort;
     protected List<String> hosts;
@@ -17,6 +18,7 @@ public class ServerInfo {
     protected ServerInfo() {
         this.domainName = "";
         this.updateURL = "";
+        this.deployURL = "";
         this.domainIp = "";
         this.httpPort = 0;
         this.hosts = new ArrayList<>();
@@ -29,6 +31,14 @@ public class ServerInfo {
             ServerInfoReader.read(UnicornDefinitions.ServerConfig.CONFIG_PATH);
         }
         return instance;
+    }
+
+    public String getDeployURL() {
+        return deployURL;
+    }
+
+    public void setDeployURL(String deployURL) {
+        this.deployURL = deployURL;
     }
 
     public String getDomainIp() {
