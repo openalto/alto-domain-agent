@@ -20,6 +20,7 @@ import org.snlab.unicorn.model.odl.StreamLocation;
 public class ODLNotificationClient {
 
     private final static Logger LOG = LoggerFactory.getLogger(ODLNotificationClient.class);
+    private final static Long MAX_IDLE_TIMEOUT = 7200000L;
 
     private static ObjectMapper mapper = new ObjectMapper();
     private URI baseUri;
@@ -42,6 +43,7 @@ public class ODLNotificationClient {
             return socket;
         }
         client = new WebSocketClient();
+        client.setMaxIdleTimeout(MAX_IDLE_TIMEOUT);
         socket = new ODLNotificationSocket();
         try {
             client.start();
