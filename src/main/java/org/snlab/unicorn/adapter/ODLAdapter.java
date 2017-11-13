@@ -219,11 +219,7 @@ public class ODLAdapter extends MockAdapter {
             Response response = executor
                     .execute(getRestconfRequest(UNICORN_RESOURCE_QUERY_URI,
                             convertQueryDescsToResourceQueryRequestString(queryDescs)));
-            if (response.returnResponse().getStatusLine().getStatusCode() / 100 != 2) {
-                return null;
-            } else {
-                return convertJsonStringToResourceQueryResponse(response.returnContent().asString());
-            }
+            return convertJsonStringToResourceQueryResponse(response.returnContent().asString());
         } catch (JsonProcessingException e) {
             LOG.error("Invalid json value:", e);
         } catch (IOException e) {
