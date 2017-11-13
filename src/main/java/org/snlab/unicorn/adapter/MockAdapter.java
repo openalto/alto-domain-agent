@@ -1,5 +1,7 @@
 package org.snlab.unicorn.adapter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.UnicornDefinitions;
 import org.snlab.unicorn.model.Ane;
 import org.snlab.unicorn.model.AneMatrix;
@@ -24,6 +26,7 @@ public class MockAdapter implements ControllerAdapter {
 
     private final static String DEFAULT_IPV4_ADDR = "10.10.10.10";
     private final static int MAX_ANE_NUM = 10;
+    private final static Logger LOG = LoggerFactory.getLogger(MockAdapter.class);
     private Random randomGen = new Random();
     private boolean changeSignal = false;
 
@@ -65,7 +68,14 @@ public class MockAdapter implements ControllerAdapter {
         List<String> response = new ArrayList<>();
         for (QueryItem item : queryDescs) {
             String dstIp = item.getFlow().getDstIp();
-            response.add(this.pathResult.getOrDefault(dstIp, DEFAULT_IPV4_ADDR));
+            if(ServerInfo.getInstance().getHosts().contains(dstIp) || ServerInfo.getInstance().getIngressPoints().contains(dstIp))
+                response.add("");
+            else {
+                String nextIngressPoint = this.pathResult.getOrDefault(dstIp, DEFAULT_IPV4_ADDR);
+                if (nextIngressPoint.equals(DEFAULT_IPV4_ADDR))
+                    LOG.warn("Use default ipv4 address: " + DEFAULT_IPV4_ADDR, " to destination: " + dstIp);
+                response.add(nextIngressPoint);
+            }
         }
         body.setResponse(response);
         return body;
