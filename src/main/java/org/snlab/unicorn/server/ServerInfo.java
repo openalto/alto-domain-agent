@@ -1,6 +1,7 @@
 package org.snlab.unicorn.server;
 
 import org.snlab.unicorn.UnicornDefinitions;
+import org.snlab.unicorn.model.Host;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ public class ServerInfo {
     protected String deployURL;
     protected String domainIp;
     protected int httpPort;
-    protected List<String> hosts;
+    protected List<Host> hosts;
     protected List<String> ingressPoints;
 
     protected ServerInfo() {
@@ -73,15 +74,23 @@ public class ServerInfo {
         this.updateURL = updateURL;
     }
 
-    public List<String> getHosts() {
+    public List<Host> getHosts() {
         return hosts;
     }
 
-    public void setHosts(List<String> hosts) {
+    public void setHosts(List<Host> hosts) {
         this.hosts = hosts;
     }
 
-    public void addHost(String host) {
+    public List<String> getHostIPs() {
+        List<String> hostIps = new ArrayList<>();
+        for (Host host : this.hosts) {
+            hostIps.add(host.getHostIp());
+        }
+        return hostIps;
+    }
+
+    public void addHost(Host host) {
         this.hosts.add(host);
     }
 

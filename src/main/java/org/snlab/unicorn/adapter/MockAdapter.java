@@ -68,7 +68,7 @@ public class MockAdapter implements ControllerAdapter {
         List<String> response = new ArrayList<>();
         for (QueryItem item : queryDescs) {
             String dstIp = item.getFlow().getDstIp();
-            if(ServerInfo.getInstance().getHosts().contains(dstIp) || ServerInfo.getInstance().getIngressPoints().contains(dstIp))
+            if(ServerInfo.getInstance().getHostIPs().contains(dstIp) || ServerInfo.getInstance().getIngressPoints().contains(dstIp))
                 response.add("");
             else {
                 String nextIngressPoint = this.pathResult.getOrDefault(dstIp, DEFAULT_IPV4_ADDR);
