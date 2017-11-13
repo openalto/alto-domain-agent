@@ -9,7 +9,7 @@ public class NovaExecutionTest {
 
     private static String callNovaForRSA(String response) {
         Runtime runtime = Runtime.getRuntime();
-        String command = "nova '" + response + "'";
+        String[] command = new String[]{"nova", response};
         String resultMsg = "";
         String errorMsg = "";
         String line;
@@ -20,6 +20,7 @@ public class NovaExecutionTest {
             while ((line = stdout.readLine()) != null) {
                 resultMsg += line;
             }
+            System.out.println(resultMsg);
             while ((line = stderr.readLine()) != null) {
                 errorMsg += line;
             }
@@ -31,7 +32,7 @@ public class NovaExecutionTest {
             resultMsg = response;
         }
         if (!errorMsg.isEmpty()) {
-            System.out.println(errorMsg);
+            System.out.println("error: " + errorMsg);
             resultMsg = response;
         }
         return resultMsg;
@@ -40,7 +41,7 @@ public class NovaExecutionTest {
     public static void main(String[] args) {
         String testData = "{\"anes\": [{\"availbw\": 3}, {\"availbw\": 7}, {\"availbw\": 3}], \"ane-matrix\": [[{\"flow-id\": \"0\"}, {\"flow-id\": \"1\"}], [{\"flow-id\": \"1\"}, {\"flow-id\": \"2\"}], [{\"flow-id\": \"2\"}]]}";
         String newData = callNovaForRSA(testData);
-        System.out.println(testData);
-        System.out.println(newData);
+        System.out.println("original: " + testData);
+        System.out.println("new: " + newData);
     }
 }

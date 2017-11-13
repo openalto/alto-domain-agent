@@ -48,7 +48,7 @@ public class OrchestratorQueryHandler {
 
     private static String callNovaForRSA(String response) {
         Runtime runtime = Runtime.getRuntime();
-        String command = "nova '" + response + "'";
+        String[] command = new String[]{"nova", response};
         String resultMsg = "";
         String errorMsg = "";
         String line;
