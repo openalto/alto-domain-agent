@@ -1,5 +1,7 @@
 package org.snlab.unicorn.server;
 
+import org.snlab.unicorn.model.Host;
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -22,7 +24,8 @@ public class ServerInfoReader {
 
         JsonArray hosts = obj.getJsonArray("hosts");
         for (JsonValue host : hosts) {
-            info.addHost(((JsonString) host).getString());
+            JsonObject hostObject = host.asJsonObject();
+            info.addHost(new Host(hostObject.getString("host-ip"), hostObject.getString("management-ip")));
         }
 
         JsonArray ingressPoints = obj.getJsonArray("ingress-points");

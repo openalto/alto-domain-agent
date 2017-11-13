@@ -1,5 +1,6 @@
 package org.snlab.unicorn.register;
 
+import org.snlab.unicorn.model.Host;
 import org.snlab.unicorn.orchestrator.OrchestratorInfo;
 import org.snlab.unicorn.server.ServerInfo;
 
@@ -7,6 +8,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStream;
@@ -54,8 +56,12 @@ public class UnicornRegisterBuilder {
             ServerInfo serverInfo = ServerInfo.getInstance();
             JsonBuilderFactory factory = Json.createBuilderFactory(new HashMap<>());
             JsonArrayBuilder hostsBuilder = factory.createArrayBuilder();
-            for (String host : serverInfo.getHosts()) {
-                hostsBuilder.add(host);
+            for (Host host : serverInfo.getHosts()) {
+                JsonObject hostObject = factory.createObjectBuilder()
+                        .add("host-ip", host.getHostIp())
+                        .add("management-ip", host.getManagementIp())
+                        .build();
+                hostsBuilder.add(hostObject);
             }
 
             JsonArrayBuilder ingressPointsBuilder = factory.createArrayBuilder();
