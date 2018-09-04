@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.model.Ane;
 import org.snlab.unicorn.model.AneMatrix;
+import org.snlab.unicorn.model.Endpoints;
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.QueryItem;
 import org.snlab.unicorn.model.ResourceQueryResponse;
@@ -32,6 +33,8 @@ import org.snlab.unicorn.model.odl.ODLAne;
 import org.snlab.unicorn.model.odl.ODLAneFlowCoefficient;
 import org.snlab.unicorn.model.odl.ODLFlowDesc;
 import org.snlab.unicorn.model.odl.ODLNextIngressPoint;
+import org.snlab.unicorn.model.odl.ODLPathComputationInput;
+import org.snlab.unicorn.model.odl.ODLPathComputationRequest;
 import org.snlab.unicorn.model.odl.ODLPathQueryInput;
 import org.snlab.unicorn.model.odl.ODLPathQueryOutput;
 import org.snlab.unicorn.model.odl.ODLPathQueryRequest;
@@ -46,6 +49,7 @@ public class ODLAdapter implements ControllerAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(ODLAdapter.class);
     private final static String UNICORN_PATH_QUERY_URI = "/operations/alto-unicorn:path-query";
     private final static String UNICORN_RESOURCE_QUERY_URI = "/operations/alto-unicorn:resource-query";
+    private final static String SPCE_SETUP_ROUTE_URI = "/operations/alto-spce:setup-route";
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -189,6 +193,14 @@ public class ODLAdapter implements ControllerAdapter {
         return mapper.writeValueAsString(request);
     }
 
+    private String convertEndpointsToPathComputationRequestString(Endpoints endpoints) throws JsonProcessingException {
+        ODLPathComputationRequest request = new ODLPathComputationRequest();
+        ODLPathComputationInput input = new ODLPathComputationInput();
+        input.setEndpoints(endpoints);
+        request.setInput(input);
+        return mapper.writeValueAsString(request);
+    }
+
     public PathQueryResponseBody getAsPath(List<QueryItem> queryDescs) {
         try {
             Response response = executor
@@ -220,6 +232,22 @@ public class ODLAdapter implements ControllerAdapter {
             LOG.error("Fail to handle http request:", e);
         }
         return null;
+    }
+
+    @Override
+    public String deployRoute(Endpoints endpoints) {
+        String result = "{\"error-code\": \"ERROR\"}";
+        try {
+            Response response = executor
+                    .execute(getRestconfRequest(SPCE_SETUP_ROUTE_URI,
+                            convertEndpointsToPathComputationRequestString(endpoints)));
+            result = response.returnContent().asString();
+        } catch (JsonProcessingException e) {
+            LOG.error("Invalid json value:", e);
+        } catch (IOException e) {
+            LOG.error("Fail to handle http request:", e);
+        }
+        return result;
     }
 
     @Override

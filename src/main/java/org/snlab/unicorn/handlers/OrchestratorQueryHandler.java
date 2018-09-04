@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.adapter.ControllerAdapter;
 import org.snlab.unicorn.dataprovider.QueryDataProvider;
+import org.snlab.unicorn.model.Endpoints;
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.Query;
 import org.snlab.unicorn.model.QueryDesc;
@@ -139,6 +140,20 @@ public class OrchestratorQueryHandler {
             LOG.error("Invalid json string:", e);
         }
         return callNovaForRSA(result);
+    }
+
+    public String syncDeploy(String body) {
+        Endpoints endpoints;
+        try {
+            endpoints = mapper.readValue(body, Endpoints.class);
+        } catch (IOException e) {
+            LOG.error("Invalid json string:", e);
+            return "{\"meta\": { \"code\": \"Unknown type\"}}";
+        }
+
+        String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
+        result = adapter.deployRoute(endpoints);
+        return result;
     }
 
     /**

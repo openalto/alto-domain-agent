@@ -2,6 +2,7 @@ package org.snlab.unicorn.adapter;
 
 import java.util.List;
 
+import org.snlab.unicorn.model.Endpoints;
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.QueryItem;
 import org.snlab.unicorn.model.ResourceQueryResponseBody;
@@ -19,6 +20,12 @@ public class KytosAdapter implements ControllerAdapter {
         // TODO: Implement stateless unicorn resource query API.
         return null;
     }
+
+    @Override
+    public String deployRoute(Endpoints endpoints) {
+        // TODO: Implement stateless path setup API.
+        return "{\"meta\":{\"code\": \"fail\", \"message\": \"Method deployRoute is not implemented.\"} }";
+	}
 
     @Override
     public boolean ifAsPathChangedThenCleanState() {

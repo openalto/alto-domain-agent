@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.UnicornDefinitions;
 import org.snlab.unicorn.model.Ane;
 import org.snlab.unicorn.model.AneMatrix;
+import org.snlab.unicorn.model.Endpoints;
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.QueryItem;
 import org.snlab.unicorn.model.ResourceQueryResponse;
@@ -107,6 +108,12 @@ public class MockAdapter implements ControllerAdapter {
         body.setResponse(response);
         return body;
     }
+
+    @Override
+    public String deployRoute(Endpoints endpoints) {
+        // TODO: Implement stateless path setup API.
+        return "{\"meta\":{\"code\": \"fail\", \"message\": \"Method deployRoute is not implemented.\"} }";
+	}
 
     @Override
     public boolean ifAsPathChangedThenCleanState() {

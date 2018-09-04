@@ -1,14 +1,5 @@
 package org.snlab.unicorn.register;
 
-import org.snlab.unicorn.model.Host;
-import org.snlab.unicorn.orchestrator.OrchestratorInfo;
-import org.snlab.unicorn.server.ServerInfo;
-
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonBuilderFactory;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStream;
@@ -19,6 +10,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonBuilderFactory;
+import javax.json.JsonObject;
+
+import org.snlab.unicorn.model.Host;
+import org.snlab.unicorn.orchestrator.OrchestratorInfo;
+import org.snlab.unicorn.server.ServerInfo;
 
 public class UnicornRegisterBuilder {
     protected List<OrchestratorInfo> orchestratorInfos;

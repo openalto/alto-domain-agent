@@ -2,6 +2,7 @@ package org.snlab.unicorn.adapter;
 
 import java.util.List;
 
+import org.snlab.unicorn.model.Endpoints;
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.QueryItem;
 import org.snlab.unicorn.model.ResourceQueryResponseBody;
@@ -25,6 +26,13 @@ public interface ControllerAdapter {
      * @return the response of resource query
      */
     public ResourceQueryResponseBody getResource(List<QueryItem> queryDescs);
+
+    /**
+     * Implements stateless path setup API.
+     * @param endpoints a pair of source and destination addresses
+     * @return
+     */
+    public String deployRoute(Endpoints endpoints);
 
     /**
      * Check if as-path changed and then clean the state for stateful path query API.

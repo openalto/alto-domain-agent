@@ -116,9 +116,11 @@ public class UnicornService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public String startDeploy(String body) {
-        // TODO: Handle deploy
-        System.out.println(body);
-        return "{\"meta\":{\"code\": \"success\"} }";
+        if (defaultQueryHandler == null) {
+            OrchestratorQueryHandler.setHandler(DEFAULT_CONTROL_ID, getNewAdapterInstance());
+            defaultQueryHandler = OrchestratorQueryHandler.getHandler(DEFAULT_CONTROL_ID);
+        }
+        return defaultQueryHandler.syncDeploy(body);
     }
 
     @Path(RESOURCE_QUERY_ROUTE)
