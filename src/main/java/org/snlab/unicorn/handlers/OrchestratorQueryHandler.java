@@ -26,6 +26,7 @@ import org.snlab.unicorn.adapter.ControllerAdapter;
 import org.snlab.unicorn.dataprovider.QueryDataProvider;
 import org.snlab.unicorn.model.PathQueryResponseBody;
 import org.snlab.unicorn.model.Query;
+import org.snlab.unicorn.model.QueryDesc;
 import org.snlab.unicorn.model.QueryItem;
 import org.snlab.unicorn.model.ResourceQueryResponseBody;
 
@@ -119,6 +120,25 @@ public class OrchestratorQueryHandler {
 
         requireQuery(query.getQueryId());
         return "{\"meta\": { \"code\": \"success\"}}";
+    }
+
+    public String syncHandle(String body) {
+        QueryDesc queryDesc;
+        try {
+            queryDesc = mapper.readValue(body, QueryDesc.class);
+        } catch (IOException e) {
+            LOG.error("Invalid query body:", e);
+            return "{\"meta\": { \"code\": \"Unknown type\"}}";
+        }
+
+        ResourceQueryResponseBody response = adapter.getResource(queryDesc.getQueryDesc());
+        String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
+        try {
+            result = mapper.writeValueAsString(response.getResponse());
+        } catch (JsonProcessingException e) {
+            LOG.error("Invalid json string:", e);
+        }
+        return callNovaForRSA(result);
     }
 
     /**

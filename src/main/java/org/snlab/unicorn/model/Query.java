@@ -9,11 +9,10 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 
 import org.snlab.unicorn.dataprovider.QueryDataProvider;
 
-public class Query {
-    private QueryAction action;
-    private String queryId;
-    private QueryType queryType;
-    private List<QueryItem> queryDesc = new ArrayList<>();
+public class Query extends QueryDesc {
+    protected QueryAction action;
+    protected String queryId;
+    protected QueryType queryType;
 
     @JsonGetter("action")
     public QueryAction getAction() {
@@ -43,16 +42,6 @@ public class Query {
     @JsonSetter("query-type")
     public void setQueryType(QueryType queryType) {
         this.queryType = queryType;
-    }
-
-    @JsonGetter("query-desc")
-    public List<QueryItem> getQueryDesc() {
-        return queryDesc;
-    }
-
-    @JsonSetter("query-desc")
-    public void setQueryDesc(List<QueryItem> queryDesc) {
-        this.queryDesc = queryDesc;
     }
 
     public Query manipulate(){

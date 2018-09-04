@@ -36,6 +36,7 @@ public class UnicornService {
     private final static String UPDATES_STREAM_CONTROL_TYPE = "application/updatestreamcontrol";
     private final static String UPDATE_STREAM_ROUTE = "updates";
     private final static String CONTROL_STREAM_ROUTE = "controls";
+    private final static String RESOURCE_QUERY_ROUTE = "resource-query";
     private final static String DEPLOY_ROUTE = "deploys";
     private final static String PARAMETER_NAME_ADAPTER_TYPE = "adapter.type";
     private final static String PARAMETER_NAME_ADAPTER_BASEURI = "adapter.baseUri";
@@ -43,6 +44,9 @@ public class UnicornService {
     private final static String PARAMETER_NAME_ADAPTER_AUTH_PASSWORD = "adapter.auth.password";
     private final static String ADAPTER_TYPE_ODL = "odl"; // Maybe we can use an enum type
     private final static String ADAPTER_TYPE_MOCK = "mock"; // Maybe we can use an enum type
+    private final static String DEFAULT_CONTROL_ID = new UUID(0, 0).toString();
+
+    private OrchestratorQueryHandler defaultQueryHandler;
 
     @Context
     private UriInfo uriInfo;
@@ -115,6 +119,18 @@ public class UnicornService {
         // TODO: Handle deploy
         System.out.println(body);
         return "{\"meta\":{\"code\": \"success\"} }";
+    }
+
+    @Path(RESOURCE_QUERY_ROUTE)
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String resourceQuery(String body) {
+        if (defaultQueryHandler == null) {
+            OrchestratorQueryHandler.setHandler(DEFAULT_CONTROL_ID, getNewAdapterInstance());
+            defaultQueryHandler = OrchestratorQueryHandler.getHandler(DEFAULT_CONTROL_ID);
+        }
+        return defaultQueryHandler.syncHandle(body);
     }
 
     public class ControlServiceResource {
