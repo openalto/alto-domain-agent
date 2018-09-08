@@ -30,6 +30,7 @@ import org.snlab.unicorn.model.Query;
 import org.snlab.unicorn.model.QueryDesc;
 import org.snlab.unicorn.model.QueryItem;
 import org.snlab.unicorn.model.ResourceQueryResponseBody;
+import org.snlab.unicorn.utils.ExternalCommand;
 
 public class OrchestratorQueryHandler {
     private final static Logger LOG = LoggerFactory.getLogger(OrchestratorQueryHandler.class);
@@ -49,34 +50,7 @@ public class OrchestratorQueryHandler {
     }
 
     private static String callNovaForRSA(String response) {
-        Runtime runtime = Runtime.getRuntime();
-        String[] command = new String[]{"nova", response};
-        String resultMsg = "";
-        String errorMsg = "";
-        String line;
-
-        try {
-            Process process = runtime.exec(command);
-            BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            while ((line = stdout.readLine()) != null) {
-                resultMsg += line;
-            }
-            while ((line = stderr.readLine()) != null) {
-                errorMsg += line;
-            }
-            stderr.close();
-            stdout.close();
-            process.waitFor();
-        } catch (IOException | InterruptedException e) {
-            LOG.error("Error occurs when executing nova", e);
-            resultMsg = response;
-        }
-        if (!errorMsg.isEmpty()) {
-            LOG.error(errorMsg);
-            resultMsg = response;
-        }
-        return resultMsg;
+        return ExternalCommand.callExternalCommand("nova", response, response);
     }
 
     public static boolean setHandler(String identifier, ControllerAdapter adapter) {
@@ -154,6 +128,14 @@ public class OrchestratorQueryHandler {
         String result = "{\"meta\": { \"code\": \"Unknown error\"}}";
         result = adapter.deployRoute(endpoints);
         return result;
+    }
+
+    public String syncDeploy(String body, boolean onDemand) {
+        if (!onDemand) {
+            return syncDeploy(body);
+        }
+        // TODO: Validate JSON format before proceed
+        return adapter.deployOnDemandRoute(body);
     }
 
     /**

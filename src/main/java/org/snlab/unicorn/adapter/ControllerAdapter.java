@@ -35,6 +35,13 @@ public interface ControllerAdapter {
     public String deployRoute(Endpoints endpoints);
 
     /**
+     * Implements demand-based path setup API.
+     * @param demand the demand for a set of flows
+     * @return
+     */
+    public String deployOnDemandRoute(String demand);
+
+    /**
      * Check if as-path changed and then clean the state for stateful path query API.
      */
     public boolean ifAsPathChangedThenCleanState();

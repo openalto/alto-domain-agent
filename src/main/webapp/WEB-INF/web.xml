@@ -28,6 +28,11 @@
         <param-value>mock</param-value>
     </context-param>
     <context-param>
+        <description>The node id of the switch attached to the DPI</description>
+        <param-name>adapter.dpi</param-name>
+        <param-value>openflow:1</param-value>
+    </context-param>
+    <context-param>
         <description>Base uri for controller restful api</description>
         <param-name>adapter.baseUri</param-name>
         <param-value>http://localhost:8181</param-value>

@@ -38,4 +38,10 @@ public class KytosAdapter implements ControllerAdapter {
         // TODO: Inject a callback. Once receiving resource changed notification, call the method.
         return false;
     }
+
+    @Override
+    public String deployOnDemandRoute(String demand) {
+        // Implements demand-based path setup API.
+        return "{\"meta\":{\"code\": \"fail\", \"message\": \"Method deployOnDemandRoute is not implemented.\"} }";
+    }
 }

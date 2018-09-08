@@ -116,6 +116,12 @@ public class MockAdapter implements ControllerAdapter {
 	}
 
     @Override
+    public String deployOnDemandRoute(String demand) {
+        // TODO: Implements demand-based path setup API.
+        return "{\"meta\":{\"code\": \"fail\", \"message\": \"Method deployOnDemandRoute is not implemented.\"} }";
+    }
+
+    @Override
     public boolean ifAsPathChangedThenCleanState() {
         if (changeSignal) {
             changeSignal = false;

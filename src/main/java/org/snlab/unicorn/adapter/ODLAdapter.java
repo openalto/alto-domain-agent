@@ -1,6 +1,8 @@
 package org.snlab.unicorn.adapter;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ import org.snlab.unicorn.model.odl.ODLQueryDesc;
 import org.snlab.unicorn.model.odl.ODLResourceQueryInput;
 import org.snlab.unicorn.model.odl.ODLResourceQueryRequest;
 import org.snlab.unicorn.model.odl.ODLResourceQueryResponse;
+import org.snlab.unicorn.utils.ExternalCommand;
 
 public class ODLAdapter implements ControllerAdapter {
 
@@ -55,6 +58,7 @@ public class ODLAdapter implements ControllerAdapter {
 
     private URI baseUri;
     private Credentials auth;
+    private String dpiNode;
     private Executor executor;
     private boolean isAsPathChanged = false;
     private boolean isResourceChanged = false;
@@ -70,6 +74,11 @@ public class ODLAdapter implements ControllerAdapter {
         executor = Executor.newInstance().auth(this.auth);
         mapper.setSerializationInclusion(Include.NON_NULL);
         setupWebsocketToListenUpdate();
+    }
+
+    public ODLAdapter(URI baseUri, Credentials auth, String dpiNode) {
+        this(baseUri, auth);
+        this.dpiNode = dpiNode;
     }
 
     private void setupWebsocketToListenUpdate() {
@@ -248,6 +257,14 @@ public class ODLAdapter implements ControllerAdapter {
             LOG.error("Fail to handle http request:", e);
         }
         return result;
+    }
+
+    @Override
+    public String deployOnDemandRoute(String demand) {
+        String defaultOutput = "{\"error-code\": \"Error\"}";
+        return ExternalCommand.callExternalCommand("pyunicorn", defaultOutput, "-e", this.baseUri.toString(), "-u",
+                this.auth.getUserPrincipal().getName() + ":" + this.auth.getPassword(), "--dpi", this.dpiNode, "-d",
+                demand.replaceAll("\\s+", ""), "ors");
     }
 
     @Override

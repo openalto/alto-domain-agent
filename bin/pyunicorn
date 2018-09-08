@@ -1,0 +1,245 @@
+#!/usr/bin/env python2
+
+import re
+import json
+import networkx as nx
+
+from odl.instance import ODLInstance
+from odl.exceptions import NodeNotFound, TableNotFound
+
+DEFAULT_TEMPLATE_DIR = "/var/lib/data/python-odl/templates/"
+
+def get_ports_on_path(path):
+    regex = r'^openflow:[0-9a-z-]+:[0-9]+$'
+    ports = list(filter(lambda x: re.match(regex, x), path))
+    return zip(ports[::2], ports[1::2])
+
+class DomainAgent(object):
+    def __init__(self, odl_instance, template_dir=DEFAULT_TEMPLATE_DIR, dpi_node=None, debug=False):
+        self.odl = odl_instance
+        self.template_dir = template_dir
+        self.dpi_node = dpi_node
+        self.debug = debug
+
+    def setup_flow(self, node_id, table_id, flow_rule):
+        """
+        This will install a flow.
+        """
+        try:
+            node = self.odl.get_node_by_id(node_id)
+            table = node.get_table_by_id(table_id)
+        except (NodeNotFound, TableNotFound):
+            return False
+
+        table.install_flow(priority = flow_rule.get('priority'),
+                           name = flow_rule.get('name'),
+                           eth_type = flow_rule.get('eth_type'),
+                           eth_source = flow_rule.get('eth_source'),
+                           eth_destination = flow_rule.get('eth_destination'),
+                           ipv4_source = flow_rule.get('ipv4_source'),
+                           ipv4_destination = flow_rule.get('ipv4_destination'),
+                           connector_id = flow_rule.get('output'),
+                           template_dir = self.template_dir)
+        return True
+
+    def setup_path(self, path_id, src, dst, path, priority=100):
+        """
+        This will install flows across a path.
+        """
+        ports = get_ports_on_path(path)
+
+        # Install a flow in each switch on the path with correct output
+        # port.
+        for source_port, target_port in ports:
+            source_switch = "%s:%s" % (source_port.split(":")[0], source_port.split(":")[1])
+            target_switch = "%s:%s" % (target_port.split(":")[0], target_port.split(":")[1])
+            # Just in case check
+            if (source_switch != target_switch):
+                if self.debug:
+                    print "Error 500: Switches are different on path"
+                return False
+
+            # Match: source_port, source_host, target_host, eth_type = 0x806 ?
+            # Target Action: target_port
+            # Lookup for switch in database
+            try:
+                node = self.odl.get_node_by_id(target_switch)
+                table = node.get_table_by_id(0) # Assuming installing on table 0
+            except (NodeNotFound, TableNotFound):
+                if self.debug:
+                    print "Error: 404 - Switch or table not found in database"
+                return False
+
+            if self.debug:
+                print "Inserting flow for %s..." % node.id
+
+            # Install the flow one way
+            table.l3output(flow_name = "L3-Route%d" % path_id,
+                           connector_id = target_port,
+                           source = src and "%s/32" % src,
+                           destination = dst and "%s/32" % dst,
+                           template_dir = self.template_dir)
+
+            # Install the flow another way
+            table.l3output(flow_name = "L3-Route%d" % (path_id + 1),
+                           connector_id = source_port,
+                           source = dst and "%s/32" % dst,
+                           destination = src and "%s/32" % src,
+                           template_dir = self.template_dir)
+
+
+        if self.debug:
+            print '[setup_path] ports:', ports
+
+        links = self.odl.topology.get_links()
+        fwd_path = [filter(lambda k: links[k]['source']['source-tp'] == dp, links)[0] for sp, dp in ports]
+        back_path = [filter(lambda k: links[k]['source']['source-tp'] == sp, links)[0] for sp, dp in ports]
+        self.update_path_manager(path_id, src, dst, fwd_path, priority)
+        self.update_path_manager(path_id + 1, dst, src, back_path, priority)
+        return True
+
+    def update_path_manager(self, path_id, src, dst, path, priority=100):
+        if self.debug:
+            print '[update_path_manager] update:', path_id, src, dst, path, priority
+        self.odl.put("/restconf/config/alto-pathmanager:path-manager/path/%d" % path_id,
+                     json.dumps({
+                         "path": {
+                             "id": path_id, "priority": priority,
+                             "flow-desc": {
+                                 "src-ip": src and "%s/32" % src,
+                                 "dst-ip": dst and "%s/32" % dst
+                             },
+                             "links":[ { "link": link } for link in path ]
+                         }
+                     }))
+
+    def read_path_manager(self):
+        response = self.odl.get("/restconf/config/alto-pathmanager:path-manager")
+        self.path_manager = response.get('path-manager', {}).get('path', [])
+        return self.path_manager
+
+    def do_resource_query(self, data):
+        response = self.odl.post("/restconf/operations/alto-unicorn:resource-query", data)
+        return json.dumps(response)
+
+    def match_demand(self, path, min_bw=0, pass_to_dpi=False):
+        ports = get_ports_on_path(path)
+        if pass_to_dpi and self.dpi_node not in path:
+            return False
+        if min_bw and self.get_availbw([tp for sp, tp in ports]) < min_bw:
+            return False
+        return True
+
+    def compute_on_demand_path(self, demands):
+        """
+        Compute path by the on-demand requirement.
+
+        Example:
+            [
+              {
+                "src": "10.0.1.101",
+                "dst": "10.0.1.201",
+                "min-bw": 20000,
+                "pass-to-dpi": true
+              },
+              {
+                "src": "10.0.1.102",
+                "dst": "10.0.1.202",
+                "min-bw": 20000,
+                "pass-to-dpi": true
+              },
+            ]
+        """
+        path_manager = self.read_path_manager()
+        cur_id = len(path_manager) and max([p.get('id') for p in path_manager]) + 1
+
+        if self.debug:
+            print '[compute_on_demand_path] cur_id:', cur_id
+
+        for flow_demand in demands:
+            src = flow_demand.get('src')
+            dst = flow_demand.get('dst')
+            min_bw = flow_demand.get('min-bw', 0)
+            pass_to_dpi = flow_demand.get('pass-to-dpi', False)
+
+            paths = self.get_all_e2e_path(src, dst)
+
+            for path in paths:
+                if self.debug:
+                    print '[compute_on_demand_path] check_path:', path
+                if self.match_demand(path, min_bw, pass_to_dpi):
+                    if self.debug:
+                        print '[compute_on_demand_path] match the demand'
+                    self.setup_path(cur_id, src, dst, path)
+                    cur_id += 1
+                    break
+        return json.dumps({'error-code': 'OK'})
+
+    def get_availbw(self, ports):
+        output = self.odl.post("/restconf/operations/alto-bwmonitor:bwmonitor-query",
+                               json.dumps({
+                                   "input": {
+                                       "port-id": ports
+                                   }
+                               }))
+        availbws = [v.get('avail-bw', 0) for v in output.get('output', {}).get('port-speed', [])]
+        return len(availbws) and min(availbws)
+
+    def get_all_e2e_path(self, src, dst):
+        graph = self.odl.topology.get_networkx_graph()
+
+        src_id, dst_id = None, None
+        # Theses are topology nodes
+        nodes = self.odl.topology.get_nodes()
+        for node in nodes.values():
+            node_id = node['node-id']
+            if (node_id.split(":")[0] == "host"):
+                ips = node['host-tracker-service:addresses']
+                for ip in ips:
+                    if not src_id and ip['ip'] == src:
+                        src_id = "host:%s" % ip['mac']
+
+                    if not dst_id and ip['ip'] == dst:
+                        dst_id = "host:%s" % ip['mac']
+
+        if not src_id or not dst_id:
+            return []
+
+        return nx.all_simple_paths(graph, src_id, dst_id)
+
+
+def parse_argument():
+    import argparse
+    parser = argparse.ArgumentParser(description='Stateless ALTO Domain Agent (Python Wrapper).')
+    parser.add_argument('-e', '--endpoint', dest='endpoint',
+                        default='http://127.0.0.1:8181',
+                        help='Access endpoint for the remote controller API (default: "http://127.0.0.1:8181").')
+    parser.add_argument('-u', '--auth', dest='auth',
+                        default='admin:admin',
+                        help='Authenticate for the remote controller (default: "admin:admin").')
+    parser.add_argument('--dpi', dest='dpi',
+                        help='Node id attached to the DPI.')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Enable verbosity to trace import statements')
+    parser.add_argument('command', metavar='COMMAND')
+    parser.add_argument('-d', '--data', dest='data',
+                        help='Data for the command.')
+    return parser
+
+def main():
+    import sys
+    import json
+    parser = parse_argument()
+    args = parser.parse_args(sys.argv[1:])
+    odl_instance = ODLInstance(args.endpoint, tuple(args.auth.split(':')))
+    agent = DomainAgent(odl_instance, dpi_node=args.dpi, debug=args.verbose)
+    if args.command == 'rq':
+        print agent.do_resource_query(args.data)
+    elif args.command == 'ors':
+        print agent.compute_on_demand_path(json.loads(args.data))
+    elif args.command == 'paths':
+        print agent.read_path_manager()
+
+
+if __name__ == '__main__':
+    main()

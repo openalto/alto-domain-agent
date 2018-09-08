@@ -38,7 +38,9 @@ public class UnicornService {
     private final static String CONTROL_STREAM_ROUTE = "controls";
     private final static String RESOURCE_QUERY_ROUTE = "resource-query";
     private final static String DEPLOY_ROUTE = "deploys";
+    private final static String ON_DEMAND_DEPLOY_ROUTE = "on-demand-deploy";
     private final static String PARAMETER_NAME_ADAPTER_TYPE = "adapter.type";
+    private final static String PARAMETER_NAME_ADAPTER_DPI = "adapter.dpi";
     private final static String PARAMETER_NAME_ADAPTER_BASEURI = "adapter.baseUri";
     private final static String PARAMETER_NAME_ADAPTER_AUTH_USERNAME = "adapter.auth.username";
     private final static String PARAMETER_NAME_ADAPTER_AUTH_PASSWORD = "adapter.auth.password";
@@ -59,8 +61,10 @@ public class UnicornService {
         if (ADAPTER_TYPE_ODL.equals(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_TYPE))) {
             try {
                 adapter = new ODLAdapter(new URI(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_BASEURI)),
-                        new UsernamePasswordCredentials(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_USERNAME),
-                                servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_PASSWORD)));
+                        new UsernamePasswordCredentials(
+                                servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_USERNAME),
+                                servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_PASSWORD)),
+                        servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_DPI));
             } catch (URISyntaxException e) {
                 LOG.error("Fail to create adapter: baseUri is invalid!");
             }
@@ -120,8 +124,21 @@ public class UnicornService {
             OrchestratorQueryHandler.setHandler(DEFAULT_CONTROL_ID, getNewAdapterInstance());
             defaultQueryHandler = OrchestratorQueryHandler.getHandler(DEFAULT_CONTROL_ID);
         }
-        return defaultQueryHandler.syncDeploy(body);
+        return defaultQueryHandler.syncDeploy(body, false);
     }
+
+    @Path(ON_DEMAND_DEPLOY_ROUTE)
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String startOnDemandDeploy(String body) {
+        if (defaultQueryHandler == null) {
+            OrchestratorQueryHandler.setHandler(DEFAULT_CONTROL_ID, getNewAdapterInstance());
+            defaultQueryHandler = OrchestratorQueryHandler.getHandler(DEFAULT_CONTROL_ID);
+        }
+        return defaultQueryHandler.syncDeploy(body, true);
+    }
+
 
     @Path(RESOURCE_QUERY_ROUTE)
     @POST

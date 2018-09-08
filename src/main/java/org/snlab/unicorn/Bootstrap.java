@@ -14,6 +14,7 @@ import org.snlab.unicorn.register.UnicornRegister;
 import org.snlab.unicorn.register.UnicornRegisterBuilder;
 
 public class Bootstrap extends HttpServlet {
+    private static final long serialVersionUID = 2974591291665439150L;
     private final static Logger LOG = LoggerFactory.getLogger(Bootstrap.class);
 
     @Override
