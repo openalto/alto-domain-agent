@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.adapter.ControllerAdapter;
 import org.snlab.unicorn.adapter.MockAdapter;
 import org.snlab.unicorn.adapter.ODLAdapter;
+import org.snlab.unicorn.adapter.SC18Adapter;
 import org.snlab.unicorn.handlers.OrchestratorQueryHandler;
 
 import javax.servlet.ServletContext;
@@ -46,6 +47,7 @@ public class UnicornService {
     private final static String PARAMETER_NAME_ADAPTER_AUTH_PASSWORD = "adapter.auth.password";
     private final static String ADAPTER_TYPE_ODL = "odl"; // Maybe we can use an enum type
     private final static String ADAPTER_TYPE_MOCK = "mock"; // Maybe we can use an enum type
+    private final static String ADAPTER_TYPE_SC18 = "sc18"; // This could be removed from official version
     private final static String DEFAULT_CONTROL_ID = new UUID(0, 0).toString();
 
     private OrchestratorQueryHandler defaultQueryHandler;
@@ -70,6 +72,16 @@ public class UnicornService {
             }
         } else if (ADAPTER_TYPE_MOCK.equals(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_TYPE))) {
             adapter = new MockAdapter();
+        } else if (ADAPTER_TYPE_SC18.equals(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_TYPE))) {
+            try {
+                adapter = new SC18Adapter(new URI(servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_BASEURI)),
+                        new UsernamePasswordCredentials(
+                                servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_USERNAME),
+                                servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_AUTH_PASSWORD))
+                        ,servletContext.getInitParameter(PARAMETER_NAME_ADAPTER_DPI));
+            } catch (URISyntaxException e) {
+                LOG.error("Fail to create adapter: baseUri is invalid!");
+            }
         }
         return adapter;
     }

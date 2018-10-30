@@ -11,5 +11,6 @@ public class UnicornDefinitions {
 
     public static class AdapterConfig {
         public static String MOCK_CONFIG_PATH = "/adapter/mock.json";
+        public static String SC18_CONFIG_PATH = "/adapter/sc18.json";
     }
 }
