@@ -29,9 +29,11 @@ public class SC18PathVectorReader {
         int pathIndex = 0;
         for(PathItem path: paths) {
             for (String port: path.getLinks()) {
-                if(!portFlowMap.containsKey(port))
-                    portFlowMap.put(port, new HashSet<>());
-                portFlowMap.get(port).add(pathIndex);
+                if (bandwidthMap.containsKey(port)) {
+                    if (!portFlowMap.containsKey(port))
+                        portFlowMap.put(port, new HashSet<>());
+                    portFlowMap.get(port).add(pathIndex);
+                }
             }
             pathIndex += 1;
         }
