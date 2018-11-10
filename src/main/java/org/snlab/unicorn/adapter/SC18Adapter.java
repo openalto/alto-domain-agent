@@ -46,6 +46,8 @@ public class SC18Adapter implements ControllerAdapter {
         pathResult = new HashMap<>();
         pathManager = new SC18PathManager(UnicornDefinitions.AdapterConfig.SC18_CONFIG_PATH);
         configReader(UnicornDefinitions.AdapterConfig.SC18_CONFIG_PATH);
+
+        LOG.info("Path manager initialized, which size is " + pathManager.size() + ".");
     }
 
     private void configReader(String adapterConfigPath) {

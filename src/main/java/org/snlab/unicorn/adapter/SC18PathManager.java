@@ -21,6 +21,10 @@ public class SC18PathManager {
         configReader(adapterConfigPath);
     }
 
+    public int size(){
+        return pathItems.size();
+    }
+
     private void configReader(String adapterConfigPath) {
         InputStream stream = SC18Adapter.class.getClassLoader().getResourceAsStream(adapterConfigPath);
         String domainName = ServerInfo.getInstance().getDomainName();
