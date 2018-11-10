@@ -5,6 +5,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.UnicornDefinitions;
@@ -23,7 +24,7 @@ import java.util.*;
 public class SC18Adapter implements ControllerAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(SC18Adapter.class);
 
-    private final static String BWMONITOR_QUERY_URI = "";
+    private final static String BWMONITOR_QUERY_URI = "/restconf/operations/alto-bwmonitor:bwmonitor-query";
 
     private Map<String, String> pathResult;
 
@@ -107,7 +108,8 @@ public class SC18Adapter implements ControllerAdapter {
         Map<String, Long> bandwidthMap = new HashMap<>();
         for (String port : requirePortIds) {
             try {
-                Response resp = executor.execute(Request.Post(this.baseUri + BWMONITOR_QUERY_URI));
+                Response resp = executor.execute(Request.Post(this.baseUri + BWMONITOR_QUERY_URI)
+                        .bodyString("{\"input\": {\"port-id\": [\"" + port + "\"]}}", ContentType.APPLICATION_JSON));
                 Long bw = convertBandwidthResponseToLong(resp.returnContent().asString());
                 bandwidthMap.put(port, bw);
             } catch (IOException e) {
