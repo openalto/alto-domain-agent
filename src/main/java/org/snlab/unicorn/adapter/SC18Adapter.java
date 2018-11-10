@@ -106,15 +106,25 @@ public class SC18Adapter implements ControllerAdapter {
 
         // Find the availbw of every port
         Map<String, Long> bandwidthMap = new HashMap<>();
-        for (String port : requirePortIds) {
-            try {
-                Response resp = executor.execute(Request.Post(this.baseUri + BWMONITOR_QUERY_URI)
-                        .bodyString("{\"input\": {\"port-id\": [\"" + port + "\"]}}", ContentType.APPLICATION_JSON));
-                Long bw = convertBandwidthResponseToLong(resp.returnContent().asString());
-                bandwidthMap.put(port, bw);
-            } catch (IOException e) {
-                e.printStackTrace();
+
+        List<String> quotedPortIds = new ArrayList<>();
+        for (String port : requirePortIds) quotedPortIds.add("\"" + port + "\"");
+        String requiredPorts = String.join(", ", quotedPortIds);
+        try {
+            Response resp = executor.execute(Request.Post(this.baseUri + BWMONITOR_QUERY_URI).bodyString(
+                    "{\"input\": {\"port-id\" : [" + requiredPorts + "]}}", ContentType.APPLICATION_JSON
+            ));
+            JsonObject obj = Json.createReader(new StringReader(resp.returnContent().asString())).readObject();
+            JsonArray speedList = obj.getJsonObject("output").getJsonArray("port-speed");
+            for (int speedIndex = 0; speedIndex < speedList.size(); speedIndex += 1) {
+                JsonObject speedObject = speedList.getJsonObject(speedIndex);
+                String port = speedObject.getString("port-id");
+                int bw = speedObject.getInt("avail-bw");
+                bandwidthMap.put(port, (long)bw);  // # TODO: Danger for big bandwidth
+                LOG.info(port + ": " + (Integer)bw);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         SC18PathVectorReader pvReader = new SC18PathVectorReader(bandwidthMap);
@@ -151,12 +161,6 @@ public class SC18Adapter implements ControllerAdapter {
         response.setAneMatrix(matrix);
         body.setResponse(response);
         return body;
-    }
-
-    private Long convertBandwidthResponseToLong(String resp) {
-        JsonObject object = Json.createReader(new StringReader(resp)).readObject();
-        // TODO: implement this
-        return 0L;
     }
 
     @Override
