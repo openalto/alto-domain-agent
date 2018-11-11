@@ -29,6 +29,15 @@ public class SC18PathVectorReader {
         int pathIndex = 0;
         for(PathItem path: paths) {
             for (String port: path.getLinks()) {
+                if (port.contains("/")) {
+                    String[] ports = port.split("/");
+                    for (String port_id: ports) {
+                        if (port_id.startsWith("openflow")){
+                            port=port_id;
+                            break;
+                        }
+                    }
+                }
                 if (bandwidthMap.containsKey(port)) {
                     if (!portFlowMap.containsKey(port))
                         portFlowMap.put(port, new HashSet<>());
