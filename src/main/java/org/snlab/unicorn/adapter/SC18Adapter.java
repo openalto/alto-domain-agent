@@ -158,6 +158,7 @@ public class SC18Adapter implements ControllerAdapter {
 
             Ane ane = new Ane();
             ane.setAvailbw(item.getY());
+            anes.add(ane);
         }
 
         response.setAnes(anes);
