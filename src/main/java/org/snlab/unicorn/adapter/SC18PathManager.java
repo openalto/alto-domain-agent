@@ -9,9 +9,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.InputStream;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 public class SC18PathManager {
     private Queue<PathItem> pathItems;
@@ -29,6 +27,11 @@ public class SC18PathManager {
         InputStream stream = SC18Adapter.class.getClassLoader().getResourceAsStream(adapterConfigPath);
         String domainName = ServerInfo.getInstance().getDomainName();
         JsonObject object = Json.createReader(stream).readObject().getJsonObject(domainName);
+        JsonArray availablePortsArray = object.getJsonArray("ports");
+        Set<String> availablePorts = new HashSet<>();
+        for (int i = 0; i < availablePortsArray.size(); i++) {
+            availablePorts.add(availablePortsArray.getString(i));
+        }
         JsonArray routes = object.getJsonArray("route");
         for (int i = 0; i < routes.size(); i++){
             JsonObject route = routes.getJsonObject(i);
@@ -50,7 +53,8 @@ public class SC18PathManager {
                         }
                     }
                 }
-                item.addHop(link);
+                if (availablePorts.contains(link))
+                    item.addHop(link);
             }
             pathItems.add(item);
         }
