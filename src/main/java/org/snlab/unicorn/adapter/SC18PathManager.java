@@ -40,7 +40,17 @@ public class SC18PathManager {
             );
             JsonArray links = route.getJsonArray("links");
             for (int j = 0; j < links.size(); j++) {
-                item.addHop(links.getJsonObject(j).getString("link"));
+                String link = links.getJsonObject(j).getString("link");
+                if (link.contains("/")) {
+                    String[] ports = link.split("/");
+                    for (String port : ports) {
+                        if (port.startsWith("openflow")) {
+                            link = port;
+                            break;
+                        }
+                    }
+                }
+                item.addHop(link);
             }
             pathItems.add(item);
         }

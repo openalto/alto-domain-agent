@@ -1,5 +1,7 @@
 package org.snlab.unicorn.adapter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snlab.unicorn.model.PathItem;
 import org.snlab.unicorn.model.PathVectorItem;
 
@@ -9,6 +11,8 @@ public class SC18PathVectorReader {
 
     private Map<String, Long> bandwidthMap;
     private List<PathItem> paths;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SC18PathVectorReader.class);
 
     public SC18PathVectorReader(Map<String, Long> bandwidthMap){
         this.bandwidthMap = bandwidthMap;

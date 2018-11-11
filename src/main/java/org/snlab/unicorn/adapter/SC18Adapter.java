@@ -104,23 +104,7 @@ public class SC18Adapter implements ControllerAdapter {
         Set<String> requirePortIds = new HashSet<>();
         for (PathItem item : pathItems) {
             List<String> links = item.getLinks();
-            for (String link: links) {
-                if (link.contains("/")) {
-                    String[] ports = link.split("/");
-                    for (String port: ports) {
-                        if (port.startsWith("openflow")) {
-                            requirePortIds.add(port);
-                            break;
-                        }
-                    }
-                } else {
-                    requirePortIds.add(link);
-                }
-            }
-        }
-
-        for (String reqiredPortId: requirePortIds) {
-            LOG.debug("Read port: " + reqiredPortId);
+            requirePortIds.addAll(links);
         }
 
         // Find the availbw of every port
