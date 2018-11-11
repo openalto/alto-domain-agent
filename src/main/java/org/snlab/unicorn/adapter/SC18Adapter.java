@@ -15,6 +15,7 @@ import org.snlab.unicorn.server.ServerInfo;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.print.DocFlavor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -101,8 +102,22 @@ public class SC18Adapter implements ControllerAdapter {
 
         // Get port ids given by flow
         Set<String> requirePortIds = new HashSet<>();
-        for (PathItem item : pathItems)
-            requirePortIds.addAll(item.getLinks());
+        for (PathItem item : pathItems) {
+            List<String> links = item.getLinks();
+            for (String link: links) {
+                if (link.contains("/")) {
+                    String[] ports = link.split("/");
+                    for (String port: ports) {
+                        if (port.startsWith("openflow")) {
+                            requirePortIds.add(port);
+                            break;
+                        }
+                    }
+                } else {
+                    requirePortIds.add(link);
+                }
+            }
+        }
 
         // Find the availbw of every port
         Map<String, Long> bandwidthMap = new HashMap<>();
