@@ -119,6 +119,10 @@ public class SC18Adapter implements ControllerAdapter {
             }
         }
 
+        for (String reqiredPortId: requirePortIds) {
+            LOG.debug("Read port: " + reqiredPortId);
+        }
+
         // Find the availbw of every port
         Map<String, Long> bandwidthMap = new HashMap<>();
 
